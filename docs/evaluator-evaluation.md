@@ -18,6 +18,9 @@ misses into rules), mapped onto this repo's real chain:
 | Tuning set split from a fixed test set | `eval/tuning/` vs `eval/test/` |
 | Turn misses into rules | The tuning loop in §5; two v1 misses became a kernel fix and a rubric rule |
 | A check must say why it pulled in a reviewer | Every stage line in the scorecard carries the chain's own message (check text, veto reason, gate detail) |
+| A finding without a scene is not a finding | Every incident case carries a `scenario`: the real-world scene the defect causes (§3) |
+| Deterministic hooks as guardrails, not advice | `.claude/hooks/` — the fixed exam and baseline are write-protected; a Stop gate re-runs the smoke layer (§8) |
+| A definition is a declaration, not the agent | Definition completeness (§8): the templates' frontmatter + SOP anatomy, statically checked |
 
 ## 1. The chain under evaluation
 
@@ -64,13 +67,21 @@ are reported as *noise* — worth seeing, not counted as false positives.
 ```
 eval/{tuning|test}/<case-id>/
   case.json      id, kind (incident|control), chain (scan|rubric|coverage|prd),
-                 title, source, smoke?, expect (incidents), rubric (file name)
+                 title, source, smoke?, scenario (incidents),
+                 expect (incidents), rubric (file name)
   rubric.json    rubric cases only — the rubric under test is part of the case
   workspace/     the fixture project the chain runs against
 ```
 
 - `expect.why` is the answer key: one sentence naming the check that
   must fire and why. No why, no case — `validateCaseDef` refuses it.
+- `scenario` is the trigger scene: one sentence on what happens in the
+  real world if this defect ships — who notices, and how it hurts. The
+  reviewer's rule applies to cases exactly as to findings: 说不清场景的
+  不许报 — a defect you cannot attach a scene to is not a defect, it is
+  a superstition, and an exam built on superstitions teaches the chain
+  to over-report. `validateCaseDef` refuses incidents without one, and
+  the scorecard prints it above the answer key.
 - `source` records where the defect really came from (a repo fixture, a
   SPEC decision, a kernel behavior). Synthetic defects are allowed only
   when they map one-to-one onto a real check.
@@ -105,6 +116,11 @@ that documents a real, currently-unfixable gap may declare
 `"knownGap": true` with its reason in the answer key; it is reported
 under *Known gaps* and does not fail the run. v1 ships with no known
 gaps — both v1 misses were fixable, and were fixed (§5).
+
+Every run also prints a **Definition completeness** section (§8): a
+static check of the templates' agent/skill declarations. It is
+report-only by design — it never changes the exit code, because fixing
+the templates is a separate act from measuring them.
 
 ## 5. What v1 found, and what it changed
 
@@ -210,3 +226,45 @@ positives above 0 mean the chain cries wolf; the noise lines on passing
 controls are the early-warning version of the same problem. Then read
 the differential section: it tells you what *changed*, which is the
 only thing a number alone cannot.
+
+## 8. The evaluation map
+
+This repo evaluates itself at three different layers, and confusing
+them produces nonsense conclusions ("the eval is green" — *which*
+eval?). The layers exist because a definition file is three different
+things depending on where you stand:
+
+| Layer | Lives in | Question it answers | How it runs |
+| --- | --- | --- | --- |
+| **Definition triggering** | `src/skills-eval.js` (`harness skills eval`) | In a *fresh* host session, does the right skill actually fire for a given prompt — and does nothing fire when nothing should? | A golden prompt set (≈80% should-trigger / 20% should-not) is run by a session that did not write the skills; the returned evidence is scored deterministically for accuracy |
+| **Definition completeness** | `eval/definitions.mjs` (a section of every `npm run eval` report) | Is the declaration itself complete — frontmatter the host can roster (name, description), a description that states its trigger and its boundary, a body with a procedure and an output/done spec? | Static checks over `templates/claude-code/agents/*.md` and `templates/skills/*/SKILL.md`; pass/warn/fail per file, each finding stating what is missing and why it matters; report-only |
+| **Kernel acceptance chain** | `eval/` (§1–§7 of this page) | When real work is judged, do scan, rubric evaluation, the coverage gate and the PRD contract actually block the defects they exist to block — at discovery, at judgment, and at the final verdict? | The staged-recall exam of §2, with its tuning/test split, smoke/property/differential layers (§6) |
+
+The three layers map onto three facts about how agents are built:
+
+- **A declaration is not an agent.** A markdown file is a *declaration*
+  — frontmatter (identity, capability boundary, the trigger the roster
+  matches on) plus a body that becomes the system prompt. The agent
+  exists only when a host runtime parses the declaration and runs the
+  loop around a model. That is why the declaration gets its own layer:
+  a malformed declaration fails before any loop starts, and no amount
+  of chain testing downstream can see it.
+- **A skill is an SOP loaded on demand.** Skills are not pasted into
+  the system prompt; the model pulls one in when the situation matches
+  its description. So the load-bearing property of a skill is whether
+  it *gets loaded* — which is a property of its description, testable
+  only in a fresh session (`skills-eval`), not by reading the file and
+  not by testing the kernel. Completeness (does the SOP have steps and
+  a done spec?) and triggering (does it fire?) are different questions
+  with different instruments; this map keeps them separate on purpose.
+- **A hook is a deterministic guardrail.** Prompts ask; hooks enforce.
+  This repo's own hooks live in `.claude/` and guard the evaluation
+  itself: a **PreToolUse** guard blocks `Edit`/`Write` on
+  `eval/test/**` and `eval/baseline.json` — the exam and its recorded
+  standard may not be edited in passing, and the block message says why
+  and names the legitimate path (`npm run eval -- --update-baseline`,
+  or the loud `HARNESS_EVAL_UNLOCK=1` escape hatch) — and a **Stop**
+  gate re-runs the smoke layer before a session may call itself done,
+  with `stop_hook_active` honored so a block can never loop forever.
+  The full test suite is deliberately *not* in the Stop gate: a
+  guardrail slow enough to resent is a guardrail that gets removed.

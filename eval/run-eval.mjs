@@ -19,6 +19,7 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { discoverCases, runCases, formatReport, diffBaseline, baselineFromResults, runFailed } from './lib.mjs';
+import { checkDefinitions, formatDefinitionsSection } from './definitions.mjs';
 
 const EVAL_ROOT = path.dirname(fileURLToPath(import.meta.url));
 const BASELINE_FILE = path.join(EVAL_ROOT, 'baseline.json');
@@ -39,6 +40,7 @@ if (cases.length === 0) {
 }
 
 const results = runCases(cases);
+const definitionSection = formatDefinitionsSection(checkDefinitions(path.join(EVAL_ROOT, '..')));
 
 let baselineDiff = null;
 let baselineNote = null;
@@ -55,7 +57,7 @@ if (updateBaseline) {
   baselineNote = 'No baseline yet — run `npm run eval -- --update-baseline` once to record one.';
 }
 
-const report = formatReport(results, { baselineDiff, baselineNote });
+const report = formatReport(results, { baselineDiff, baselineNote, definitionSection });
 console.log(report);
 if (!filtered) writeFileSync(REPORT_FILE, report);
 if (updateBaseline) console.log(`\nbaseline written to ${BASELINE_FILE}`);

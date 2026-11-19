@@ -13,6 +13,7 @@ import {
   discoverCases,
   validateCaseDef,
   runCases,
+  formatReport,
   scoreRubricIncident,
   scoreScanIncident,
   baselineFromResults,
@@ -47,6 +48,30 @@ test('validateCaseDef rejects an incident without a one-sentence answer key', ()
     /answer key/,
   );
   assert.throws(() => validateCaseDef({ id: 'x', kind: 'incident', chain: 'nope', title: 't' }), /chain/);
+});
+
+test('validateCaseDef rejects an incident without a scenario; every shipped incident carries one', () => {
+  assert.throws(
+    () =>
+      validateCaseDef({
+        id: 'x',
+        kind: 'incident',
+        chain: 'rubric',
+        title: 't',
+        rubric: 'rubric.json',
+        expect: { item: 'RB-1', why: 'w' },
+      }),
+    /scenario/,
+    'a finding you cannot attach a scene to is not a finding',
+  );
+  for (const c of discoverCases(EVAL_ROOT)) {
+    if (c.def.kind === 'incident') {
+      assert.ok(typeof c.def.scenario === 'string' && c.def.scenario.length > 0, `${c.def.id} needs a scenario`);
+    }
+  }
+  const smoke = discoverCases(EVAL_ROOT).filter((c) => c.def.smoke === true);
+  const report = formatReport(runCases(smoke));
+  assert.match(report, /Scenario: /, 'the scorecard prints each incident\'s trigger scene');
 });
 
 test('staged scoring: found by the item but not vetoed is a stage-2 leak', () => {

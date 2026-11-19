@@ -65,6 +65,10 @@ export function validateCaseDef(def, where = def?.id ?? '(unknown)') {
   if (def.kind === 'incident') {
     need(def.expect && typeof def.expect === 'object', 'incident cases need an expect (the answer key)');
     need(typeof def.expect.why === 'string' && def.expect.why.length > 0, 'expect.why is the one-sentence answer key — required');
+    need(
+      typeof def.scenario === 'string' && def.scenario.length > 0,
+      'scenario is required for incidents: one sentence on the real-world scene this defect causes — a finding you cannot attach a scene to is not a finding',
+    );
     if (def.chain === 'scan') {
       need(def.expect.dimension && def.expect.check, 'scan incidents need expect.dimension + expect.check');
     }
@@ -225,6 +229,7 @@ export function runCase({ def, set, caseDir, workspace }) {
     smoke: def.smoke === true,
     knownGap: def.knownGap === true,
     why: def.expect?.why ?? null,
+    scenario: def.scenario ?? null,
   };
   if (!existsSync(workspace)) throw new Error(`eval case ${def.id}: missing workspace/ directory`);
 
@@ -356,7 +361,7 @@ export function diffBaseline(baseline, results) {
 const pct = (hits, total) => (total === 0 ? '—' : `${hits}/${total} (${Math.round((hits / total) * 1000) / 10}%)`);
 const mark = (b) => (b ? '✓' : '✗');
 
-export function formatReport(results, { baselineDiff = null, baselineNote = null } = {}) {
+export function formatReport(results, { baselineDiff = null, baselineNote = null, definitionSection = null } = {}) {
   const out = [];
   out.push('# Evaluator evaluation — scorecard');
   out.push('');
@@ -381,6 +386,7 @@ export function formatReport(results, { baselineDiff = null, baselineNote = null
     out.push(`### ${r.id} (${r.set}, ${r.chain}, ${r.kind}${r.smoke ? ', smoke' : ''}${r.knownGap ? ', known gap' : ''})`);
     out.push('');
     out.push(r.title);
+    if (r.scenario) out.push(`Scenario: ${r.scenario}`);
     if (r.why) out.push(`Answer key: ${r.why}`);
     if (r.source) out.push(`Source: ${r.source}`);
     out.push('');
@@ -393,6 +399,9 @@ export function formatReport(results, { baselineDiff = null, baselineNote = null
       for (const n of r.noise) out.push(`- noise: ${n}`);
     }
     out.push('');
+  }
+  if (definitionSection) {
+    out.push(definitionSection);
   }
   if (baselineDiff) {
     out.push('## 与基线差异 (differential vs baseline)');

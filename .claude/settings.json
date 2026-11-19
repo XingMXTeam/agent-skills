@@ -1,0 +1,1 @@
+{"hooks":{"PreToolUse":[{"hooks":[{"command":"node .claude/hooks/guard-eval-test.mjs","type":"command"}],"matcher":"Edit|Write"}],"Stop":[{"hooks":[{"command":"node .claude/hooks/stop-smoke-gate.mjs","type":"command"}]}]}}

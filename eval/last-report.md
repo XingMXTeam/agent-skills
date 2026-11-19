@@ -39,6 +39,7 @@ Source: hand-built complete PRD numbering
 ### test-cross-route-import (test, scan, incident, smoke)
 
 A checkout route importing two modules from the account route
+Scenario: checkout 路由直接引用 account 路由的内部模块，之后 account 改了内部实现，结账页跟着崩——两个本应独立演进的页面被跨路由耦合绑成一团，一处改动两处买单。
 Answer key: checkout 路由横向引用 account 路由的模块必须被 structure/cross-route-import 拦下——跨路由耦合是页面架构最常见的腐烂方式，共享件必须下沉
 Source: test/fixtures/scan-bad/src/app/{checkout,account} — the repo's own bad fixture carries cross-route imports
 
@@ -49,6 +50,7 @@ Source: test/fixtures/scan-bad/src/app/{checkout,account} — the repo's own bad
 ### test-judge-evidence-missing (test, rubric, incident, smoke)
 
 An essential judge item whose evidence file was never written
+Scenario: 评估时 judge 项的证据文件根本没生成，评审靠印象给了通过，功能实际没跑通也照样交付——没有证据的判断不存在，这一票放行放的是空气。
 Answer key: judge 项没有证据文件必须记 0 并触发 essential 一票否决——没有证据的判断不存在，不能靠平均分蒙混（SPEC decision 3/15）
 Source: src/evaluate.js runItem judge branch (missing evidence scores 0); the inverse of examples/notice-list's RB-6 trajectory, where evidence existed and said 0
 
@@ -59,6 +61,7 @@ Source: src/evaluate.js runItem judge branch (missing evidence scores 0); the in
 ### test-plan-fp-uncovered (test, scan, incident)
 
 Three of four planned functional points are referenced nowhere in the code
+Scenario: 计划里写了四个功能点，代码里只实现了一个，交付验收时才发现另外三个连引用都不存在——计划了却没做、还没留下任何痕迹，是最安静的漏做。
 Answer key: 计划里的 FP-2/3/4 在代码里没有任何引用必须被 logic/fp-not-covered 拦下——计划了却没做、还没留下痕迹，是最安静的漏做
 Source: test/fixtures/scan-bad/plan.md carries the same defect class (plan points the code never references)
 
@@ -69,6 +72,7 @@ Source: test/fixtures/scan-bad/plan.md carries the same defect class (plan point
 ### test-prd-numbering-gap (test, prd, incident, smoke)
 
 An imported PRD whose requirement numbering skips REQ-3
+Scenario: 导入的 PRD 编号从 REQ-2 跳到 REQ-4，下游 rubric 按编号映射需求时，缺号对应的验收项全部落空——那个没编号的需求从此无人验收，直到上线缺功能才被发现。
 Answer key: PRD 编号 REQ-1/2/4 缺了 REQ-3，导入时必须报出缺号——编号契约断了，下游 rubric 的需求映射就对不上账
 Source: src/prd.js analyzePrd — the v0.9.0 PRD import numbering contract
 
@@ -93,6 +97,7 @@ Source: miniature of test/fixtures/scan-good, the repo's pinned all-100 project
 ### tuning-coverage-no-essential (tuning, coverage, incident)
 
 A requirement mapped only by an important item must trip the coverage gate
+Scenario: 评审全程绿灯、覆盖报告显示完整，功能交付后才发现 REQ-2 根本没实现——它只有 important 项撑着、没有 essential 兜底，平均分把没人验收的需求伪装成了已覆盖。
 Answer key: REQ-2 只有 important 项、没有 essential，覆盖门禁必须报出这个缺口——没有 essential 兜底的需求，分母就是被掏空的
 Source: src/rubric.js coverageGaps + docs/evaluation-rubric-standard.md §8 (the coverage gate)
 
@@ -103,6 +108,7 @@ Source: src/rubric.js coverageGaps + docs/evaluation-rubric-standard.md §8 (the
 ### tuning-pitfall-grep-directory (tuning, rubric, incident)
 
 Pitfall grep scoped to the src/ directory must still catch an innerHTML injection
+Scenario: 开发者把防注入的 pitfall 检查写成扫整个 src/ 目录，评审满分通过，含 innerHTML 注入的页面直接上线——这条红线存在于纸面，实际上从未运行过一次。
 Answer key: pitfall 的 grep 指向目录 src/ 时必须递归命中 innerHTML 赋值并触发一票否决——目录范围的 grep 静默不命中，等于这条红线不存在
 Source: src/evaluate.js runItem grep branch: a directory path made target=null and the pattern was never tested — the check silently always passed
 
@@ -113,6 +119,7 @@ Source: src/evaluate.js runItem grep branch: a directory path made target=null a
 ### tuning-score-dilution-data-spec (tuning, rubric, incident)
 
 A data-contract break diluted by nine passing items: found by the scan item, lost in the average
+Scenario: 活动页上线后运行时才白屏：数据契约里少了 startsAt 字段。评审时 scan 明明把该项打了 0 分，却被另外九个通过项的平均分稀释到及格线之上，等于查到了又放行了。
 Answer key: 代码声明缺了数据契约里的 startsAt 字段，必须被拦下——契约核心字段的检查不能只是 important，淹没在平均分里等于没查
 Source: SPEC decision 4 (veto over averages) names this failure mode; the defect itself is test/fixtures/scan-spec-bad's missing spec field
 
@@ -123,12 +130,69 @@ Source: SPEC decision 4 (veto over averages) names this failure mode; the defect
 ### tuning-secret-in-source (tuning, scan, incident, smoke)
 
 Hardcoded API key and a plain-http endpoint in the promo service client
+Scenario: 生成的代码把 API key 写死在源码里提交进仓库，任何能读到仓库的人都能拿走这把钥匙盗刷接口——凭证进了代码，就等于已经公开。
 Answer key: 源码里硬编码的 API key 必须被 data/hardcoded-secret 拦下——凭证写进代码等于公开，这是生成代码最自信的错误
 Source: test/fixtures/scan-bad/src/api.ts — the repo's own bad fixture carries this exact defect pair
 
 - S1 discovery ✓ — data/hardcoded-secret failed — Possible hardcoded credential. Move it to an environment variable — generated code loves inventing plausible-looking keys. (src/api.ts:2)
 - S2 judgment ✓ — data score 80 vs threshold 85 — below threshold, the dimension itself fails
 - S3 verdict ✓ — gate "dataReady" failed — data score 80 < 85
+
+## Definition completeness (templates — report only)
+
+Scanned 24 definition files (3 agents, 21 skills): 17 pass, 7 warn, 0 fail, 21 notes. This section measures the declarations themselves (frontmatter + SOP body); it is not part of the staged-recall score and never fails the run.
+
+### templates/skills/api-testing/SKILL.md (skill) — WARN
+
+- ⚠ [boundary] nothing states when NOT to use it (no never/only in the description, no boundaries or anti-patterns section) — why it matters: a trigger without a boundary over-fires: the dual failure of a missing trigger, and the one that pollutes unrelated work
+
+### templates/skills/e2e-testing/SKILL.md (skill) — WARN
+
+- ⚠ [boundary] nothing states when NOT to use it (no never/only in the description, no boundaries or anti-patterns section) — why it matters: a trigger without a boundary over-fires: the dual failure of a missing trigger, and the one that pollutes unrelated work
+
+### templates/skills/fix-from-report/SKILL.md (skill) — WARN
+
+- ⚠ [boundary] nothing states when NOT to use it (no never/only in the description, no boundaries or anti-patterns section) — why it matters: a trigger without a boundary over-fires: the dual failure of a missing trigger, and the one that pollutes unrelated work
+
+### templates/skills/systematic-debugging/SKILL.md (skill) — WARN
+
+- ⚠ [boundary] nothing states when NOT to use it (no never/only in the description, no boundaries or anti-patterns section) — why it matters: a trigger without a boundary over-fires: the dual failure of a missing trigger, and the one that pollutes unrelated work
+
+### templates/skills/write-acceptance-criteria/SKILL.md (skill) — WARN
+
+- ⚠ [boundary] nothing states when NOT to use it (no never/only in the description, no boundaries or anti-patterns section) — why it matters: a trigger without a boundary over-fires: the dual failure of a missing trigger, and the one that pollutes unrelated work
+
+### templates/skills/write-quality-vision/SKILL.md (skill) — WARN
+
+- ⚠ [boundary] nothing states when NOT to use it (no never/only in the description, no boundaries or anti-patterns section) — why it matters: a trigger without a boundary over-fires: the dual failure of a missing trigger, and the one that pollutes unrelated work
+
+### templates/skills/write-tech-design/SKILL.md (skill) — WARN
+
+- ⚠ [boundary] nothing states when NOT to use it (no never/only in the description, no boundaries or anti-patterns section) — why it matters: a trigger without a boundary over-fires: the dual failure of a missing trigger, and the one that pollutes unrelated work
+
+Notes (21, informational):
+
+- templates/skills/api-testing/SKILL.md: tools not declared — the skill inherits the host session toolset (this repo's skill convention)
+- templates/skills/bug-root-cause/SKILL.md: tools not declared — the skill inherits the host session toolset (this repo's skill convention)
+- templates/skills/clarify-requirements/SKILL.md: tools not declared — the skill inherits the host session toolset (this repo's skill convention)
+- templates/skills/component-from-design/SKILL.md: tools not declared — the skill inherits the host session toolset (this repo's skill convention)
+- templates/skills/context-map/SKILL.md: tools not declared — the skill inherits the host session toolset (this repo's skill convention)
+- templates/skills/deterministic-eval/SKILL.md: tools not declared — the skill inherits the host session toolset (this repo's skill convention)
+- templates/skills/e2e-testing/SKILL.md: tools not declared — the skill inherits the host session toolset (this repo's skill convention)
+- templates/skills/fix-from-report/SKILL.md: tools not declared — the skill inherits the host session toolset (this repo's skill convention)
+- templates/skills/i18n-extract/SKILL.md: tools not declared — the skill inherits the host session toolset (this repo's skill convention)
+- templates/skills/implement-task/SKILL.md: tools not declared — the skill inherits the host session toolset (this repo's skill convention)
+- templates/skills/plan-before-code/SKILL.md: tools not declared — the skill inherits the host session toolset (this repo's skill convention)
+- templates/skills/ship-checklist/SKILL.md: tools not declared — the skill inherits the host session toolset (this repo's skill convention)
+- templates/skills/state-schema-first/SKILL.md: tools not declared — the skill inherits the host session toolset (this repo's skill convention)
+- templates/skills/sync-overview/SKILL.md: tools not declared — the skill inherits the host session toolset (this repo's skill convention)
+- templates/skills/systematic-debugging/SKILL.md: tools not declared — the skill inherits the host session toolset (this repo's skill convention)
+- templates/skills/verification-before-completion/SKILL.md: tools not declared — the skill inherits the host session toolset (this repo's skill convention)
+- templates/skills/write-acceptance-criteria/SKILL.md: tools not declared — the skill inherits the host session toolset (this repo's skill convention)
+- templates/skills/write-dev-plan/SKILL.md: tools not declared — the skill inherits the host session toolset (this repo's skill convention)
+- templates/skills/write-prd/SKILL.md: tools not declared — the skill inherits the host session toolset (this repo's skill convention)
+- templates/skills/write-quality-vision/SKILL.md: tools not declared — the skill inherits the host session toolset (this repo's skill convention)
+- templates/skills/write-tech-design/SKILL.md: tools not declared — the skill inherits the host session toolset (this repo's skill convention)
 
 ## 与基线差异 (differential vs baseline)
 
