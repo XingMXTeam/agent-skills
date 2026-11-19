@@ -1,0 +1,1 @@
+{"chain":"rubric","id":"tuning-clean-promo-feature","kind":"control","relevantDimensions":["data"],"rubric":"rubric.json","smoke":true,"source":"hand-built clean counterpart of the tuning incident fixtures","title":"A small clean feature: file present, no injection pattern, data dimension at full score"}

@@ -1,0 +1,85 @@
+{
+  "version": 1,
+  "cases": {
+    "test-clean-layered-rubric": {
+      "outcome": "clean",
+      "stages": null
+    },
+    "test-clean-prd": {
+      "outcome": "clean",
+      "stages": null
+    },
+    "test-cross-route-import": {
+      "outcome": "blocked",
+      "stages": [
+        true,
+        true,
+        true
+      ]
+    },
+    "test-judge-evidence-missing": {
+      "outcome": "blocked",
+      "stages": [
+        true,
+        true,
+        true
+      ]
+    },
+    "test-plan-fp-uncovered": {
+      "outcome": "blocked",
+      "stages": [
+        true,
+        true,
+        true
+      ]
+    },
+    "test-prd-numbering-gap": {
+      "outcome": "blocked",
+      "stages": [
+        true,
+        true,
+        true
+      ]
+    },
+    "tuning-clean-promo-feature": {
+      "outcome": "clean",
+      "stages": null
+    },
+    "tuning-clean-scan-project": {
+      "outcome": "clean",
+      "stages": null
+    },
+    "tuning-coverage-no-essential": {
+      "outcome": "blocked",
+      "stages": [
+        true,
+        true,
+        true
+      ]
+    },
+    "tuning-pitfall-grep-directory": {
+      "outcome": "blocked",
+      "stages": [
+        true,
+        true,
+        true
+      ]
+    },
+    "tuning-score-dilution-data-spec": {
+      "outcome": "blocked",
+      "stages": [
+        true,
+        true,
+        true
+      ]
+    },
+    "tuning-secret-in-source": {
+      "outcome": "blocked",
+      "stages": [
+        true,
+        true,
+        true
+      ]
+    }
+  }
+}

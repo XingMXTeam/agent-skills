@@ -1,0 +1,1 @@
+{"chain":"prd","expect":{"missingId":"REQ-3","why":"PRD 编号 REQ-1/2/4 缺了 REQ-3，导入时必须报出缺号——编号契约断了，下游 rubric 的需求映射就对不上账"},"id":"test-prd-numbering-gap","kind":"incident","smoke":true,"source":"src/prd.js analyzePrd — the v0.9.0 PRD import numbering contract","title":"An imported PRD whose requirement numbering skips REQ-3"}

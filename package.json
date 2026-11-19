@@ -34,6 +34,7 @@
   "name": "frontend-harness-cli",
   "scripts": {
     "demo": "bash examples/demo.sh",
+    "eval": "node eval/run-eval.mjs",
     "test": "node --test test/*.test.js",
     "demo:run": "bash examples/demo-run.sh",
     "example": "bash examples/notice-list/run.sh"

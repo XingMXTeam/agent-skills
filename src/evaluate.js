@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { existsSync, readFileSync, statSync, writeFileSync, mkdirSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, statSync, writeFileSync, mkdirSync } from 'node:fs';
 import path from 'node:path';
 import { featureDir } from './config.js';
 import { resolveFromRoot } from './git.js';
@@ -53,14 +53,34 @@ export function runItem(root, item, timeoutMs, scanCache = new Map(), opts = {})
     case 'grep': {
       const p = resolveFromRoot(root, item.path);
       if (!existsSync(p)) return { score: 0, detail: `missing file: ${item.path}` };
+      // A grep scoped to a directory searches every file under it,
+      // recursively. (It used to test nothing at all for directories —
+      // the pattern silently never matched, so a pitfall written against
+      // a directory was a red line that did not exist. Found by the
+      // evaluator evaluation, eval/tuning/pitfall-grep-directory.)
+      const re = new RegExp(item.pattern, 'm');
       let found = false;
-      const target = statSync(p).isDirectory() ? null : p;
-      if (target) {
-        found = new RegExp(item.pattern, 'm').test(readFileSync(target, 'utf8'));
+      let hit = null;
+      if (statSync(p).isDirectory()) {
+        for (const file of walkFiles(p)) {
+          let text;
+          try {
+            text = readFileSync(file, 'utf8');
+          } catch {
+            continue; // unreadable (binary, permissions) — not evidence either way
+          }
+          if (re.test(text)) {
+            found = true;
+            hit = path.relative(root, file);
+            break;
+          }
+        }
+      } else if (re.test(readFileSync(p, 'utf8'))) {
+        found = true;
       }
       const expect = item.expect ?? 'present';
       const ok = expect === 'present' ? found : !found;
-      return { score: ok ? 1 : 0, detail: `pattern /${item.pattern}/ in ${item.path}: ${found ? 'found' : 'not found'}, expected ${expect}` };
+      return { score: ok ? 1 : 0, detail: `pattern /${item.pattern}/ in ${item.path}: ${found ? `found${hit ? ` (${hit})` : ''}` : 'not found'}, expected ${expect}` };
     }
     case 'judge': {
       const p = resolveFromRoot(root, item.evidence);
@@ -111,6 +131,33 @@ export function isRealPng(file, minBytes) {
   if (!existsSync(file)) return false;
   const buf = readFileSync(file);
   return buf.length >= minBytes && buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4e && buf[3] === 0x47;
+}
+
+/**
+ * All files under a directory, recursively, for directory-scoped greps.
+ * Skips vendor/hidden directories (node_modules, .git, .harness…) and
+ * caps the walk so a rubric pointed at a huge tree stays bounded.
+ */
+export function walkFiles(dir, cap = 5000) {
+  const out = [];
+  const walk = (d) => {
+    if (out.length >= cap) return;
+    let entries;
+    try {
+      entries = readdirSync(d, { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const e of entries) {
+      if (out.length >= cap) return;
+      if (e.name === 'node_modules' || e.name.startsWith('.')) continue;
+      const full = path.join(d, e.name);
+      if (e.isDirectory()) walk(full);
+      else if (e.isFile()) out.push(full);
+    }
+  };
+  walk(dir);
+  return out;
 }
 
 /**
