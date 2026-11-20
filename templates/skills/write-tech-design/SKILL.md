@@ -71,6 +71,18 @@ which do not exist yet.
 - No TODO / TBD. A genuinely unknown choice goes back to the user.
 - Do not write to `.harness/overview/`; list deltas in section 10.
 
+## Anti-patterns
+
+- ❌ Using this skill before `prd.md` and `vision.md` exist and the
+  clarification summary is confirmed — designing against unconfirmed
+  requirements designs the wrong thing.
+- ❌ Introducing a stack or pattern the clarification did not agree
+  to — follow the repository's existing patterns; a new pattern needs
+  the user's agreement first.
+- ❌ Writing the implementation or the work plan here — this skill
+  decides structure and names files. Sequencing the work is
+  `write-dev-plan`; writing the code is the developer's skills.
+
 ## Done Criteria
 
 - All sections present; the stack section matches the clarification.

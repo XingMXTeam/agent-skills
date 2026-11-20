@@ -86,6 +86,18 @@ suggestion) so the next cycle can fix them.
 - You never read `developer/**`, `failure-log.md`, commit messages.
 - A confirmation pass starts from zero: new capture, new evidence files.
 
+## Anti-patterns
+
+- ❌ Using this skill when the feature has no browser surface
+  (API-only, CLI, library) — there is no journey to run. API contracts
+  belong to `api-testing`; unit behavior belongs to the task's own
+  checks.
+- ❌ Substituting source reading, unit tests or API calls when the
+  browser cannot run — the evaluation is blocked; report it. A journey
+  "verified" without a browser is a false pass.
+- ❌ Fixing what it finds: the evaluator never edits product code or
+  the rubric. Fixes go through remediation (`fix-from-report`).
+
 ## Done Criteria
 
 - Every case has a result; every judge item has fresh evidence with

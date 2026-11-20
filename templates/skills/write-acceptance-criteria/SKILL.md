@@ -108,6 +108,18 @@ threshold, new verification, new item, new level), add E2E cases for the
 evaluator's exploratory findings, and record decisions in
 `replan-decisions.json`.
 
+## Anti-patterns
+
+- ❌ Using this skill before its place in the chain — without `prd.md`,
+  `vision.md`, `tech-design.md` and `tasks.json` there is nothing to
+  anchor items to. The earlier authoring steps come first.
+- ❌ Making a failing gate pass by deleting a requirement or lowering
+  a level — gaps are fixed by adding or sharpening items, never by
+  shrinking the contract.
+- ❌ Writing criteria for behavior nobody asked for — every item traces
+  to a REQ, a design intent, or an RL/ANTI anchor. Invented scope goes
+  back to clarification, not into the rubric.
+
 ## Done Criteria
 
 - `harness clarify-done` passes.

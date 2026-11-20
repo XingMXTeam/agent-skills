@@ -140,36 +140,9 @@ Source: test/fixtures/scan-bad/src/api.ts — the repo's own bad fixture carries
 
 ## Definition completeness (templates — report only)
 
-Scanned 24 definition files (3 agents, 21 skills): 17 pass, 7 warn, 0 fail, 21 notes. This section measures the declarations themselves (frontmatter + SOP body); it is not part of the staged-recall score and never fails the run.
+Scanned 24 definition files (3 agents, 21 skills): 24 pass, 0 warn, 0 fail, 21 notes. This section measures the declarations themselves (frontmatter + SOP body); it is not part of the staged-recall score and never fails the run.
 
-### templates/skills/api-testing/SKILL.md (skill) — WARN
-
-- ⚠ [boundary] nothing states when NOT to use it (no never/only in the description, no boundaries or anti-patterns section) — why it matters: a trigger without a boundary over-fires: the dual failure of a missing trigger, and the one that pollutes unrelated work
-
-### templates/skills/e2e-testing/SKILL.md (skill) — WARN
-
-- ⚠ [boundary] nothing states when NOT to use it (no never/only in the description, no boundaries or anti-patterns section) — why it matters: a trigger without a boundary over-fires: the dual failure of a missing trigger, and the one that pollutes unrelated work
-
-### templates/skills/fix-from-report/SKILL.md (skill) — WARN
-
-- ⚠ [boundary] nothing states when NOT to use it (no never/only in the description, no boundaries or anti-patterns section) — why it matters: a trigger without a boundary over-fires: the dual failure of a missing trigger, and the one that pollutes unrelated work
-
-### templates/skills/systematic-debugging/SKILL.md (skill) — WARN
-
-- ⚠ [boundary] nothing states when NOT to use it (no never/only in the description, no boundaries or anti-patterns section) — why it matters: a trigger without a boundary over-fires: the dual failure of a missing trigger, and the one that pollutes unrelated work
-
-### templates/skills/write-acceptance-criteria/SKILL.md (skill) — WARN
-
-- ⚠ [boundary] nothing states when NOT to use it (no never/only in the description, no boundaries or anti-patterns section) — why it matters: a trigger without a boundary over-fires: the dual failure of a missing trigger, and the one that pollutes unrelated work
-
-### templates/skills/write-quality-vision/SKILL.md (skill) — WARN
-
-- ⚠ [boundary] nothing states when NOT to use it (no never/only in the description, no boundaries or anti-patterns section) — why it matters: a trigger without a boundary over-fires: the dual failure of a missing trigger, and the one that pollutes unrelated work
-
-### templates/skills/write-tech-design/SKILL.md (skill) — WARN
-
-- ⚠ [boundary] nothing states when NOT to use it (no never/only in the description, no boundaries or anti-patterns section) — why it matters: a trigger without a boundary over-fires: the dual failure of a missing trigger, and the one that pollutes unrelated work
-
+Every definition is complete against the checklist.
 Notes (21, informational):
 
 - templates/skills/api-testing/SKILL.md: tools not declared — the skill inherits the host session toolset (this repo's skill convention)

@@ -32,6 +32,18 @@ No guess-and-patch. A fix you cannot explain is a second bug waiting.
   tech design — the bug may be in the plan. Report it to the
   orchestrator rather than rewriting the design yourself.
 
+## Anti-patterns
+
+- ❌ Using this skill when the cause is already proven — go straight to
+  the smallest fix. The hypothesis loop is for unknown causes, not
+  ceremony.
+- ❌ Using it for bugs outside a harness task — `bug-root-cause` covers
+  the same method for general bugs; this skill's contract is the
+  harness task report.
+- ❌ Using it when the code does what the plan said and the plan is
+  wrong — that is a design problem. Escalate to the orchestrator
+  instead of rewriting the design yourself.
+
 ## Done Criteria
 
 - Root cause stated and demonstrated; fix verified with fresh output;

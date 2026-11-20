@@ -44,6 +44,18 @@ run it, read the first failure, fix that.
 - Never commit unrelated files; never `git add -A`.
 - A fix that is not committed is not a fix: `remediate-done` needs the SHA.
 
+## Anti-patterns
+
+- ❌ Using this skill for a first implementation, or for a feature that
+  never failed evaluation — there is no report to fix from. New work
+  goes through `implement-task`.
+- ❌ Fixing defects you noticed but the report did not list — the scope
+  is exactly the open items. Anything else is a new finding for the
+  evaluator, not a remediation change.
+- ❌ "Fixing" an item you cannot reproduce — record what you tried and
+  report the item `blocked`. A blind fix is a guess with a commit
+  message.
+
 ## Done Criteria
 
 - Every listed item reproduced, root-caused, fixed and re-tested — or

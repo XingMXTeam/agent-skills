@@ -35,6 +35,18 @@ is not evidence; your own requests are.
 - Do not modify product code or data fixtures to make a case pass.
 - An API case proves the API — never a browser journey.
 
+## Anti-patterns
+
+- ❌ Using this skill when `tech-design.md` has no API contract — there
+  is nothing to verify against. Report the missing contract as an
+  `add-verification` refinement instead of inventing cases.
+- ❌ Substituting it for a browser journey: an API case proves the API,
+  never what the user sees. User-visible behavior belongs to
+  `e2e-testing`.
+- ❌ Running it outside an evaluation cycle as a general API health
+  check or debugging session — it produces judge evidence for a cycle;
+  chasing a failure's cause is `systematic-debugging`.
+
 ## Done Criteria
 
 - Every contract case executed with recorded request/response and a

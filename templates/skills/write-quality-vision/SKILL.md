@@ -76,6 +76,17 @@ RL-2: <never acceptable> (check: command)
 5. **No UI?** Keep sections 1, 4, 5 with API quality anchors (consistent
    error shape, actionable messages) and write `ui-vision: N/A — <reason>`.
 
+## Anti-patterns
+
+- ❌ Using this skill when clarification holds no quality answers to
+  draw from — the vision transcribes the user's taste, it does not
+  invent it. Go back to `clarify-requirements`.
+- ❌ Substituting it for the tech design or the rubric — it defines
+  anchors only. How the feature is built is `write-tech-design`; how
+  it is scored is `write-acceptance-criteria`.
+- ❌ Anchoring a reference or direction the user never picked — an
+  unpicked direction is a proposal for clarification, not an anchor.
+
 ## Done Criteria
 
 - REF ≥ 1, ANTI ≥ 1, RL ≥ 2 with `(check: …)`; every key screen has a
