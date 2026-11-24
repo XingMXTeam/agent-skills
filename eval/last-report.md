@@ -12,13 +12,13 @@ by false positives: a clean fixture the chain blocks is a false alarm.
 
 ## Set: test
 
-- Incidents: 4 — S1 recall 4/4 (100%), S2 recall 4/4 (100%), S3 recall 4/4 (100%)
-- Controls: 2 — false positives 0
+- Incidents: 6 — S1 recall 6/6 (100%), S2 recall 6/6 (100%), S3 recall 6/6 (100%)
+- Controls: 3 — false positives 0
 
 ## All sets
 
-- Incidents: 8 — S1 recall 8/8 (100%), S2 recall 8/8 (100%), S3 recall 8/8 (100%)
-- Controls: 4 — false positives 0
+- Incidents: 10 — S1 recall 10/10 (100%), S2 recall 10/10 (100%), S3 recall 10/10 (100%)
+- Controls: 5 — false positives 0
 
 ## Per-case detail
 
@@ -51,12 +51,12 @@ Source: test/fixtures/scan-bad/src/app/{checkout,account} — the repo's own bad
 
 An essential judge item whose evidence file was never written
 Scenario: 评估时 judge 项的证据文件根本没生成，评审靠印象给了通过，功能实际没跑通也照样交付——没有证据的判断不存在，这一票放行放的是空气。
-Answer key: judge 项没有证据文件必须记 0 并触发 essential 一票否决——没有证据的判断不存在，不能靠平均分蒙混（SPEC decision 3/15）
-Source: src/evaluate.js runItem judge branch (missing evidence scores 0); the inverse of examples/notice-list's RB-6 trajectory, where evidence existed and said 0
+Answer key: judge 项没有证据文件必须记 unverified 并触发 essential 未验证否决（fail-closed）——没有证据的判断不存在；未验证既不是通过，也不是普通的 0 分失败（SPEC decision 3/16）
+Source: src/evaluate.js runItem judge branch (missing evidence is unverified since v0.12.0; an unverified essential item vetoes fail-closed); the inverse of examples/notice-list's RB-6 trajectory, where evidence existed and said 0
 
-- S1 discovery ✓ — item RB-2 scored 0 — no judge evidence at .harness/tasks/eval-judge/evaluation/judge-rb-2.json — unevaluated items score 0
-- S2 judgment ✓ — veto recorded: essential item failed: no judge evidence at .harness/tasks/eval-judge/evaluation/judge-rb-2.json — unevaluated items score 0
-- S3 verdict ✓ — final verdict FAIL (score 0.5 vs pass 0.9, reason: veto)
+- S1 discovery ✓ — item RB-2 unverified — no judge evidence at .harness/tasks/eval-judge/evaluation/judge-rb-2.json — unevaluated items are unverified, not failed
+- S2 judgment ✓ — veto recorded: unverified
+- S3 verdict ✓ — final verdict FAIL (score 1 vs pass 0.9, reason: veto)
 
 ### test-plan-fp-uncovered (test, scan, incident)
 
@@ -79,6 +79,35 @@ Source: src/prd.js analyzePrd — the v0.9.0 PRD import numbering contract
 - S1 discovery ✓ — analyzePrd reports REQ-3 in the missing list
 - S2 judgment ✓ — the numbering report is the judgment — no downstream filter
 - S3 verdict ✓ — numberingComplete = false
+
+### test-review-tampered-report (test, review, incident)
+
+A review report whose artifact hash no longer matches the disk
+Scenario: 复核员验完之后产物又被改了一版，旧报告却写着通过；合并若不比对 SHA，新代码会顶着旧结论交付，复核等于没做。
+Answer key: 复核报告绑定的产物 SHA 与磁盘现状不一致时，该条结论必须被拒、项回到 unverified——否则改完代码拿旧报告过关，复核层就成了自报的橡皮图章（SPEC decision 16）
+Source: src/review.js validateReviewReport SHA binding; mirrors the judge-evidence freshness/anti-self-report rules
+
+- S1 discovery ✓ — item RB-2 is unverified after the static pass — no probe and no evidence decided it
+- S2 judgment ✓ — static verdict INCOMPLETE — the feature is held for review, not passed and not sent to remediation
+- S3 verdict ✓ — merged verdict INCOMPLETE (answer key: INCOMPLETE; accepted: [none]; rejected: RB-2 (artifact SHA mismatch for app.txt: the report binds 000000000000… but the artifact on disk is 4e0b184c2a61… — the reviewed bytes are not the current bytes))
+
+### test-review-valid-report (test, review, control)
+
+A valid review report merges and the feature passes
+Source: src/review.js validateReviewReport + merge path; the clean counterpart of test-review-tampered-report
+
+- Final: ✓ passes clean
+
+### test-review-veto-unverified (test, review, incident)
+
+An essential interactive item nobody has performed yet
+Scenario: 支付页的回车提交只能在真实会话里验证；没人真正按过回车，静态检查却全绿——若未验证的 essential 项被平均分稀释，这个功能会带着没验过的核心交互直接交付。
+Answer key: essential 项只能靠交互判定、又没有任何复核结论时必须 fail-closed 否决——未验证不等于通过，更不能让静态项的高分把总裁决抬过线（SPEC decision 16）
+Source: src/evaluate.js computeVerdict (unverified veto source) + src/review.js buildReviewPackage; decision 1 of the v0.12.0 review-layer spec
+
+- S1 discovery ✓ — item RB-2 is unverified after the static pass — no probe and no evidence decided it
+- S2 judgment ✓ — static verdict FAIL — item RB-2 vetoed with reason "unverified" (fail-closed), and the feature routes to review
+- S3 verdict ✓ — merged verdict FAIL (answer key: FAIL; accepted: [none]; rejected: none)
 
 ### tuning-clean-promo-feature (tuning, rubric, control, smoke)
 
@@ -140,10 +169,10 @@ Source: test/fixtures/scan-bad/src/api.ts — the repo's own bad fixture carries
 
 ## Definition completeness (templates — report only)
 
-Scanned 24 definition files (3 agents, 21 skills): 24 pass, 0 warn, 0 fail, 21 notes. This section measures the declarations themselves (frontmatter + SOP body); it is not part of the staged-recall score and never fails the run.
+Scanned 26 definition files (4 agents, 22 skills): 26 pass, 0 warn, 0 fail, 22 notes. This section measures the declarations themselves (frontmatter + SOP body); it is not part of the staged-recall score and never fails the run.
 
 Every definition is complete against the checklist.
-Notes (21, informational):
+Notes (22, informational):
 
 - templates/skills/api-testing/SKILL.md: tools not declared — the skill inherits the host session toolset (this repo's skill convention)
 - templates/skills/bug-root-cause/SKILL.md: tools not declared — the skill inherits the host session toolset (this repo's skill convention)
@@ -155,6 +184,7 @@ Notes (21, informational):
 - templates/skills/fix-from-report/SKILL.md: tools not declared — the skill inherits the host session toolset (this repo's skill convention)
 - templates/skills/i18n-extract/SKILL.md: tools not declared — the skill inherits the host session toolset (this repo's skill convention)
 - templates/skills/implement-task/SKILL.md: tools not declared — the skill inherits the host session toolset (this repo's skill convention)
+- templates/skills/interactive-review/SKILL.md: tools not declared — the skill inherits the host session toolset (this repo's skill convention)
 - templates/skills/plan-before-code/SKILL.md: tools not declared — the skill inherits the host session toolset (this repo's skill convention)
 - templates/skills/ship-checklist/SKILL.md: tools not declared — the skill inherits the host session toolset (this repo's skill convention)
 - templates/skills/state-schema-first/SKILL.md: tools not declared — the skill inherits the host session toolset (this repo's skill convention)

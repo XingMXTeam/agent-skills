@@ -64,11 +64,11 @@ const sleep = (ms) => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 
 
 // ─── skills, roles, init ─────────────────────────────────────────────────────
 
-test('init (claude-code) installs the three role agents and the shared docs', () => {
+test('init (claude-code) installs the four role agents and the shared docs', () => {
   const dir = mkdtempSync(path.join(tmpdir(), 'harness-agent-init-'));
   const r = run(dir, ['init', '--stack', 'react', '--host', 'claude-code']);
   assert.equal(r.status, 0, r.stderr);
-  for (const role of ['planner', 'developer', 'evaluator']) {
+  for (const role of ['planner', 'developer', 'evaluator', 'reviewer']) {
     const text = readFileSync(path.join(dir, '.claude', 'agents', `${role}.md`), 'utf8');
     assert.match(text, new RegExp(`^---\\nname: ${role}\\n`), role);
     assert.match(text, /## Hard boundaries/);
@@ -86,7 +86,7 @@ test('init (claude-code) installs the three role agents and the shared docs', ()
 test('init (codex/generic) gets instruction-level role files and the protocol, without host front matter', () => {
   const dir = mkdtempSync(path.join(tmpdir(), 'harness-agent-init-'));
   assert.equal(run(dir, ['init', '--stack', 'vue', '--host', 'codex']).status, 0);
-  for (const role of ['planner', 'developer', 'evaluator']) {
+  for (const role of ['planner', 'developer', 'evaluator', 'reviewer']) {
     const text = readFileSync(path.join(dir, '.harness', 'agents', `${role}.md`), 'utf8');
     assert.ok(!text.startsWith('---'), `${role} has no front matter`);
     assert.match(text, /## Hard boundaries/);
@@ -193,7 +193,8 @@ test('freshness: the confirmation pass cannot reuse the first pass evidence', ()
 
   const stale = JSON.parse(run(dir, ['eval', 'feat', '--json']).stdout);
   const rb3 = stale.evaluation.results.find((r) => r.id === 'RB-3');
-  assert.equal(rb3.score, 0);
+  assert.equal(rb3.status, 'unverified', 'stale evidence is not a judgment — the item is unverified, not failed');
+  assert.equal(rb3.score, null);
   assert.match(rb3.detail, /stale judge evidence/);
   assert.notEqual(readState(dir).phase, 'done');
 });
@@ -208,7 +209,7 @@ test('freshness: evidence written before the task finished is stale', () => {
   assert.match(out.evaluation.results.find((r) => r.id === 'RB-3').detail, /stale/);
 });
 
-test('artifacts: a judge note citing a missing artifact scores 0; a screenshot red line needs a real PNG', () => {
+test('artifacts: a judge note citing a missing artifact is unverified; a screenshot red line needs a real PNG', () => {
   const dir = judgedProject({
     stable: 1,
     items: [
@@ -595,5 +596,5 @@ test('skills: every new authoring/role skill names its harness role and ships a 
     assert.match(desc, /^Harness |^Any harness role/, `${s} description scopes it to the harness`);
     assert.ok(readFileSync(path.join(dir, s, 'SKILL.zh-CN.md'), 'utf8').includes('中文阅读版'), s);
   }
-  assert.equal(readdirSync(dir).length, 21);
+  assert.equal(readdirSync(dir).length, 22);
 });

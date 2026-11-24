@@ -2,7 +2,7 @@
 
 # harness（协议）
 
-本项目使用 **frontend-harness-cli**。CLI（`harness`）是主会话的地图，也是工作流状态的唯一真相来源。你——主会话——是**编排者**：把工作派给三个角色 agent，并运行内核命令。你不亲自做角色的工作。
+本项目使用 **frontend-harness-cli**。CLI（`harness`）是主会话的地图，也是工作流状态的唯一真相来源。你——主会话——是**编排者**：把工作派给四个角色 agent，并运行内核命令。你不亲自做角色的工作。
 
 ## 硬规则
 
@@ -15,9 +15,10 @@
    | clarify、replan | planner |
    | implement-task、remediate | developer |
    | evaluate、confirm-evaluation | evaluator（每次都是全新上下文） |
+   | review | reviewer（全新上下文；执行断言，绝不改代码） |
 
    你不写产品代码、计划、rubric 或 judge 证据。角色 agent 失败就再派一次；第二次失败就报告阻塞。不接管它的工作。
-4. **信息隔离在 packet 里。** developer 永远拿不到 `rubric.json`；evaluator 永远拿不到提交 SHA、开发者报告、失败日志或状态历史。不要把这些贴进派发内容。
+4. **信息隔离在 packet 里。** developer 永远拿不到 `rubric.json`；evaluator 与 reviewer 永远拿不到提交 SHA、开发者报告、失败日志或状态历史。不要把这些贴进派发内容。
 5. **绝不替用户做决定。** 澄清问题原样转给用户；回答原样带回。在 planner 的 prompt 里写「视为已澄清」「假设 X」「用默认值」就是替用户做决定，planner 会（正确地）无视它。
 6. 任务只有在 `harness task-done` 接受时才算完成：检查通过，且（git 仓库中）记录了真实提交 SHA。修复只有在 `harness remediate-done` 接受时才算完成。只用精确的 `git add <路径>`——绝不 `git add -A`。
 7. 只有 CLI 能宣告完成：`state.phase === "done"`（评估通过 + 稳定通过次数 + 交付门禁）。你自己绝不宣告。
@@ -33,7 +34,11 @@
 | 通过，交付门禁红 | remediate | developer |
 | 失败 + 有 rubric 改进建议 | 先 replan，再 remediate | 先 planner，再 developer |
 | 失败 | remediate | developer |
+| 未完成，有 interactive/human 项待复核 | review —— `harness review-pack`、派发、然后 `harness review-merge` | reviewer |
+| 未完成，只有 judge 证据问题 | 重新 evaluate（新鲜证据） | evaluator |
 | 预算耗尽 | human-decision | 用户 |
+
+`incomplete` 不是失败：有些条目尚未被验证（无证据、证据过期、或只有交互能判），分数只统计已验证项，在所有条目都有结论之前不许进 remediate 或 replan。essential 或 pitfall 项未验证则 fail-closed——裁决为 `fail`、否决理由 `unverified`，但同样走 review，不走返工。
 
 **绝不停在总结上。** `harness eval` 打印结论后，在同一轮里派发下一个动作。在表中两行之间问「要继续吗？」就是停下，不允许。只有这些情况可以停：`done`、`paused`、有澄清问题在等用户、或你无法排除的阻塞（说明是什么）。
 
@@ -48,6 +53,7 @@ harness next <feature>                 # 现在该做什么
   remediate          -> developer：fix-from-report skill；harness remediate-done <f> --sha <sha>
   evaluate           -> evaluator：截图 + e2e + judge 证据；然后由你运行 harness eval <f>
   confirm-evaluation -> 一个新的 evaluator 上下文重新生成全部证据；然后 harness eval <f>
+  review             -> harness review-pack <f>；reviewer：interactive-review skill，执行断言，写 review/report.json；然后由你运行 harness review-merge <f>
   done               -> harness report <f>
 ```
 

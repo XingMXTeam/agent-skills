@@ -148,6 +148,11 @@
       "expect": "sync-overview"
     },
     {
+      "id": "A14",
+      "prompt": "This rubric item can only be judged by actually playing the game to its end state in a browser — the eval left it unverified and built a review package. Which skill covers performing that check and writing the review report?",
+      "expect": "interactive-review"
+    },
+    {
       "id": "N1",
       "prompt": "Fix the typo in this README heading.",
       "expect": null

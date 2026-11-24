@@ -12,7 +12,7 @@
  *   - judge evidence may cite `"verify": ["e2e"]`, and the kernel accepts it
  *     only if that check PASSED, at the current HEAD, after the latest work;
  *   - with `evidence.requireVerify`, a judge score above 0 that cites no
- *     verify run is not evidence and scores 0.
+ *     verify run is not evidence and leaves the item unverified.
  */
 import { spawnSync } from 'node:child_process';
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';

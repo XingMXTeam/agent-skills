@@ -7,7 +7,7 @@ description: Run the frontend-harness-cli long-running workflow for a feature. U
 
 This project uses **frontend-harness-cli**. The CLI (`harness`) is the
 orchestrator's map and the only source of truth for workflow state. You —
-the main session — are the **orchestrator**: you route work to three role
+the main session — are the **orchestrator**: you route work to four role
 agents and run kernel commands. You do not do the roles' work yourself.
 
 Short form (same kernel, less typing): `fh` = `harness next <current>`,
@@ -31,14 +31,15 @@ feature is the one `fh new` created or `fh use <name>` selected.
    | clarify, replan | planner |
    | implement-task, remediate | developer |
    | evaluate, confirm-evaluation | evaluator (fresh context every time) |
+   | review | reviewer (fresh context; performs the assertions, never edits code) |
 
    You do not write product code, plans, rubrics or judge evidence. If a
    role agent fails, dispatch it again; after a second failure, report
    the blocker. Do not take over its work.
 4. **Information isolation is in the packet.** The developer never gets
-   `rubric.json`; the evaluator never gets commit SHAs, developer
-   reports, the failure log or state history. Do not paste those into a
-   dispatch.
+   `rubric.json`; the evaluator and the reviewer never get commit SHAs,
+   developer reports, the failure log or state history. Do not paste
+   those into a dispatch.
 5. **You never decide for the user.** Clarification questions go to the
    user verbatim; answers come back verbatim. Writing "treat as
    resolved", "assume X" or "use the default" into the planner's prompt
@@ -64,7 +65,17 @@ feature is the one `fh new` created or `fh use <name>` selected.
 | pass, delivery gate red | remediate | developer |
 | fail + refinement suggestions | replan, then remediate | planner, then developer |
 | fail | remediate | developer |
+| incomplete, interactive/human items pending | review — `harness review-pack`, dispatch, then `harness review-merge` | reviewer |
+| incomplete, judge evidence only | evaluate again (fresh evidence) | evaluator |
 | budget exhausted | human-decision | the user |
+
+An `incomplete` verdict is not a failure: some items are unverified
+(no evidence, stale evidence, or a check only interaction can
+decide), the score counts verified items only, and nothing routes to
+remediate or replan until every item is decided. An unverified
+essential or pitfall item fails closed instead — the verdict is
+`fail` with the veto reason `unverified`, and it still routes to
+review, not remediation.
 
 **Never stop at a summary.** When `harness eval` prints a verdict,
 dispatch the next action in the same turn. Asking "shall I continue?"
@@ -83,6 +94,7 @@ harness next <feature>                 # what should happen now
   remediate          -> developer: fix-from-report skill; harness remediate-done <f> --sha <sha>
   evaluate           -> evaluator: capture + e2e + judge evidence; then YOU run harness eval <f>
   confirm-evaluation -> a NEW evaluator context regenerates all evidence; then harness eval <f>
+  review             -> harness review-pack <f>; reviewer: interactive-review skill, performs the assertions, writes review/report.json; then YOU run harness review-merge <f>
   done               -> harness report <f>
 ```
 

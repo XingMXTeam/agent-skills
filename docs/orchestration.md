@@ -5,9 +5,9 @@ each step, what each step may read and write, and what happens after
 every verdict. `harness init` copies this file to `.harness/docs/`.
 
 The kernel (`harness`) owns state, gates and routing. It never calls a
-model. Three role agents do the thinking — **planner**, **developer**,
-**evaluator** — and one **orchestrator** (the main session, or
-`harness run`) moves between them.
+model. Four role agents do the thinking — **planner**, **developer**,
+**evaluator**, **reviewer** — and one **orchestrator** (the main
+session, or `harness run`) moves between them.
 
 ## 1. The orchestrator's boundary
 
@@ -40,6 +40,8 @@ clarify ──clarify-done──▶ implement ──eval──▶ verify ──e
    ▲                         │  ▲               │
    │                         │  └──remediate◀───┤ (fail)
    │                         │  └──replan◀──────┘ (fail + suggestions)
+   │                         └──▶ review (items only interaction or a human can decide)
+   │                              ──review-merge──▶ verdict re-computed, routing as above
    │                         └──▶ paused (budget) ──resume──▶ implement
 ```
 
@@ -50,6 +52,7 @@ clarify ──clarify-done──▶ implement ──eval──▶ verify ──e
 | implement | `replan` | planner | `harness replan-done <f>` |
 | implement | `remediate` | developer | `harness remediate-done <f> --sha <sha>` |
 | implement | `evaluate` | evaluator, then orchestrator | evidence files, then `harness eval <f>` |
+| review | `review` | reviewer, then orchestrator | `review/report.json`, then `harness review-merge <f>` |
 | verify | `confirm-evaluation` | evaluator (fresh context), then orchestrator | regenerated evidence, then `harness eval <f>` |
 | paused | `human-decision` | the user | `harness resume <f>` |
 | done | `none` | — | `harness report <f>` |
@@ -107,12 +110,13 @@ in a prompt:
 | planner | requirements, rubric, vision, tasks, last report, pending refinement suggestions | — |
 | developer | the task or open items (id + observed symptom), plan, vision, standards, tech design | `rubric.json` |
 | evaluator | requirements, rubric, vision, e2e cases, pages, judge items and their evidence paths | commit SHAs, task attempts, developer reports, failure log, state history |
+| reviewer | requirements, rubric, vision, pages, the review package (pending items, their assertions, target hashes) | commit SHAs, task attempts, developer reports, failure log, state history |
 
 Mechanisms behind the table:
 
 - `harness packet <f>` / `harness run` build packets from a whitelist per
-  role; the driver refuses to dispatch an evaluator packet that contains
-  an implementer record (tripwire, tested).
+  role; the driver refuses to dispatch an evaluator or reviewer packet
+  that contains an implementer record (tripwire, tested).
 - Under `harness run`, each step carries `HARNESS_ROLE`. Kernel commands
   that record another role's result refuse to run in the wrong role:
   only the developer may `task-done` / `remediate-done`, only the planner
@@ -120,7 +124,8 @@ Mechanisms behind the table:
   scores.
 - Judge evidence must be newer than the latest work it judges and than
   the previous evaluation. A confirmation pass therefore cannot reuse the
-  first pass's notes: stale evidence scores 0.
+  first pass's notes: stale evidence is unverified — it produces no
+  score at all, and the item waits for fresh evidence (section 7).
 
 ## 5. Verdict → next step (fixed)
 
@@ -135,11 +140,25 @@ after every run.
 | fail (veto or below passScore) + refinement suggestions | implement | `replan`, then `remediate` | planner, then developer |
 | fail (veto or below passScore), no suggestions | implement | `remediate` | developer |
 | fail, macro-cycle budget exhausted | paused | `human-decision` | the user |
+| incomplete — interactive/human items unverified | review | `review` | reviewer |
+| fail by unverified veto (essential/pitfall item unverified) | review | `review` | reviewer |
+| incomplete — judge evidence problems only | (unchanged) | `evaluate` again | evaluator |
 
 There is no "conditional pass" in the kernel: a score between 0.8 and the
 pass score is a fail with open items, and a single essential at 0 or a
 triggered pitfall is a fail at any score. Evaluators may describe a run
 as "close", but routing reads only the verdict.
+
+Since v0.12.0 every item result is three-state — `pass`, `fail`,
+`unverified` — and the verdict follows: any unverified veto source
+(essential failed-to-verify, pitfall unconfirmed) fails closed; any
+other unverified item makes the verdict `incomplete`. The weighted
+score is computed over verified items only, so an incomplete verdict's
+score is provisional. `incomplete` never routes to `remediate` or
+`replan` and never burns a macro cycle: the work is not wrong, it is
+unjudged. Three-layer verification decides who closes the gap —
+static probes first, then agent interactive review, then human
+confirmation; the score only ever comes from verified items.
 
 **Never stop at a summary.** After `harness eval` prints its verdict, the
 orchestrator dispatches the next action in the same turn. Asking the user
@@ -191,8 +210,16 @@ Suggestions filed on a passing run stay recorded and appear in
   Baselines are adopted explicitly with `--update-baseline`, and only from
   a clean run.
 - Judge evidence cites its artifacts (`"artifacts": [...]`). A cited file
-  that does not exist scores the item 0. A judge item anchored on a red
+  that does not exist leaves the item unverified. A judge item anchored on a red
   line declared `(check: screenshot)` must cite at least one real PNG.
+- Review evidence follows the same anti-self-report rules, one notch
+  stricter. `harness review-pack` freezes the pending interactive/human
+  items into `review/package.json` with the SHA-256 of every target
+  artifact; `review/report.json` entries merge only when the report is
+  fresher than the package, every cited artifact exists (screenshots
+  must be real PNGs), every target is cited with a hash that still
+  matches the disk, and human items carry a human's own attestation.
+  A rejected entry is not an error — the item simply stays unverified.
 - Playwright is the one browser tool: the library behind `capture`, the
   test runner for scripted E2E (`@playwright/test`), and optionally a
   Playwright MCP server for exploratory sessions. An API call is never
@@ -221,8 +248,9 @@ rather than inventing one.
   prd.md  vision.md  tech-design.md  pages.json
   plan.md  tasks.json        dev plan (human-readable + kernel-readable)
   rubric.json  e2e-cases.json
-  developer/<task>-report.md implementer notes (withheld from the evaluator)
+  developer/<task>-report.md implementer notes (withheld from the evaluator and the reviewer)
   evaluation/                judge-*.json, report.json, eval-<cycle>.md, rubric-refinements.json
+  review/                    package.json (kernel-built), report.json (reviewer/human), evidence files
   evidence/<run-id>/         screenshots + manifest.json (+ comparison.json)
   replan-decisions.json      planner's answers to RS-n suggestions
   failure-log.md             append-only

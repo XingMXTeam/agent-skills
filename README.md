@@ -28,8 +28,9 @@ Long-running agents fail in predictable ways:
 - Retries burn money — no budget, no pause, no human checkpoint.
 
 `harness` is the deterministic kernel that removes those failure modes. It
-never calls an LLM. Three role agents — **planner**, **developer**,
-**evaluator** — do the planning, coding and judging inside any host
+never calls an LLM. Four role agents — **planner**, **developer**,
+**evaluator**, **reviewer** — do the planning, coding, judging and
+interactive review inside any host
 (Claude Code, Codex, …); the CLI owns state, coverage, evaluation, gates,
 budgets, and what each role is allowed to see.
 
@@ -46,6 +47,8 @@ clarify ──(user confirms; rubric coverage gate)──▶ implement          
  evaluation (evidence → rubric + veto)  [evaluator, fresh context; the kernel scores]
    │ fail + refinement suggestions ──▶ replan [planner] ──▶ remediate [developer]
    │ fail ──────────────────────────────────────────────▶ remediate [developer]
+   │ incomplete (items only interaction or a human can decide)
+   │        ──▶ review [reviewer performs the assertions; kernel merges]
    │ pass ×N stable (fresh evidence each time)
    ▼
  delivery gate ──▶ done          budget exhausted at any point ──▶ paused (human decides)
@@ -75,6 +78,7 @@ remembers it (`fh use <name>` switches, `fh s --all` lists every feature).
 | remediate | `remediate-done` | HEAD is a new commit |
 | replan | `replan-done` | every suggestion decided; rubric only tightens |
 | evaluate / confirm | `eval` | vetoes, pass score, stable passes, delivery gate |
+| review | `review-merge` | review report validates (freshness, real evidence, SHA binding) |
 
 `fh done` refuses to record a step at a commit that was already recorded or that
 predates the feature — so "commit precisely, then mark done" is enforced instead of
@@ -126,10 +130,10 @@ fh verify --only unit,e2e
 That record is the only verify evidence the kernel accepts:
 
 - a rubric item `{ "kind": "verify", "check": "e2e" }` runs the check itself;
-- judge evidence cites runs by id — `"verify": ["unit", "e2e"]` — and scores 0
-  unless each one **passed, at the current HEAD, after the latest work**;
+- judge evidence cites runs by id — `"verify": ["unit", "e2e"]` — and is
+  unverified unless each one **passed, at the current HEAD, after the latest work**;
 - `evidence.requireVerify` (on by default when `init` finds checks): a judge
-  score above 0 that cites no verify run is a self-report and scores 0.
+  score above 0 that cites no verify run is a self-report and is unverified.
 
 **Repeated corrections become enforced rules.** A veto that keeps coming back
 is a missing rule. `fh learn` reads every evaluation of every feature, groups
@@ -190,7 +194,15 @@ A rubric is generated **per feature**, from its requirements:
   are deterministic and decided by scripts, never by a model. `judge` is for
   what scripts cannot decide: an evaluator writes
   `{ "score": 0|0.5|1, "note": "…" }` to an evidence file; no evidence means
-  score 0. `scan` reads a dimension score from the vendored gate engine.
+  the item is unverified — a third state, not a score. `scan` reads a dimension score from the vendored gate engine.
+- `verify`: `static | interactive | human` — who can actually decide the
+  item. **Three-layer verification: static probes / agent interactive
+  review / human confirmation — scores come only from verified items.**
+  An `interactive` item must carry an executable `assert` (steps +
+  expect) and is decided by the reviewer performing it in a running
+  session; a `human` item only by a human's own attested entry. Items
+  nobody has verified yet make the verdict `incomplete` — held, never
+  remediated, never averaged away.
 
   The bundled five-dimension scanner also runs standalone —
   `harness scan [--json] [path]`, no init, zero config, CI exit codes —
@@ -205,7 +217,8 @@ A rubric is generated **per feature**, from its requirements:
   ```
 - **Veto rule**: any essential item at 0, or any pitfall triggered, fails the
   verdict *no matter how high the weighted score is*. Averages never bury a
-  fatal flaw.
+  fatal flaw. An essential or pitfall item that could not be verified at
+  all fails it too — fail-closed, veto reason `unverified`.
 - **Coverage gate**: implementation cannot start until every requirement maps
   to at least one essential item. You cannot game the denominator by not
   writing checks for the hard parts.
@@ -230,7 +243,7 @@ A rubric is generated **per feature**, from its requirements:
 kernel is stack-agnostic; the pack carries the conventions (layering,
 size, data/network, state, tokens, UI behavior, tests, visual
 regression). Host support today: `claude-code` (installs the `harness`
-protocol skill, the three role agents, the skills pack, and a
+protocol skill, the four role agents, the skills pack, and a
 session-start hook that injects the orchestrator rules and the active
 feature), `codex` / `generic` (instruction-level role files + protocol in
 `.harness/`).
@@ -318,16 +331,17 @@ stagnation" rule, enforced mechanically instead of by exhortation.
 v0.4 could drive a loop; v0.5 says who does each step, what they may
 see, and how they write the contract the kernel enforces.
 
-**Three roles, isolation as a mechanism.** `init --host claude-code`
-installs `.claude/agents/planner.md`, `developer.md`, `evaluator.md`
+**Four roles, isolation as a mechanism.** `init --host claude-code`
+installs `.claude/agents/planner.md`, `developer.md`, `evaluator.md`,
+`reviewer.md`
 (hard boundaries, input/output contracts, handoff fields); codex/generic
 get the same text in `.harness/agents/`. Each action belongs to one role:
 clarify/replan → planner, implement-task/remediate → developer,
-evaluate/confirm-evaluation → evaluator. The kernel builds each role's
+evaluate/confirm-evaluation → evaluator, review → reviewer. The kernel builds each role's
 packet from a whitelist (`harness packet <feature>`): the developer never
-gets `rubric.json`; the evaluator never gets commit SHAs, developer
+gets `rubric.json`; the evaluator and the reviewer never get commit SHAs, developer
 reports, the failure log or state history — `harness run` refuses to send
-an evaluator packet that would. Under `run`, every step carries
+an evaluator or reviewer packet that would. Under `run`, every step carries
 `HARNESS_ROLE`, and kernel commands refuse the wrong role (only the
 developer records `task-done` / `remediate-done`, only the planner
 `replan-done`, nobody but the orchestrator runs `eval`). Judge evidence

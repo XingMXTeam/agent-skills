@@ -3,7 +3,8 @@
  *
  * Method (from the Claude Code team's verification practice):
  *   - Review the reviewers: the chain that judges features (scan sensor →
- *     rubric evaluation → coverage gate → PRD contract) is itself judged
+ *     rubric evaluation → coverage gate → PRD contract → review merge) is
+ *     itself judged
  *     against a fixed set of incident cases with one-sentence answer keys
  *     and clean controls that must all pass.
  *   - Staged recall: an incident counts separately at three stages —
@@ -26,12 +27,13 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { runScan, loadScanConfig } from '../src/scan.js';
 import { evaluateRubric } from '../src/evaluate.js';
+import { buildReviewPackage, validateReviewReport } from '../src/review.js';
 import { validateRubric, coverageGaps } from '../src/rubric.js';
 import { analyzePrd } from '../src/prd.js';
 import { DEFAULT_CONFIG, deepMerge } from '../src/config.js';
 
 export const SETS = ['tuning', 'test'];
-export const CHAINS = ['scan', 'rubric', 'coverage', 'prd'];
+export const CHAINS = ['scan', 'rubric', 'coverage', 'prd', 'review'];
 export const EVAL_CONFIG = { evaluation: { commandTimeoutMs: 30000 } };
 
 /** Discover case definitions under <evalRoot>/{tuning,test}/<id>/case.json. */
@@ -73,10 +75,11 @@ export function validateCaseDef(def, where = def?.id ?? '(unknown)') {
       need(def.expect.dimension && def.expect.check, 'scan incidents need expect.dimension + expect.check');
     }
     if (def.chain === 'rubric') need(def.expect.item, 'rubric incidents need expect.item');
+    if (def.chain === 'review') need(def.expect.item && def.expect.finalVerdict, 'review incidents need expect.item + expect.finalVerdict');
     if (def.chain === 'coverage') need(def.expect.requirement, 'coverage incidents need expect.requirement');
     if (def.chain === 'prd') need(def.expect.missingId, 'prd incidents need expect.missingId');
   }
-  if (def.chain === 'rubric' || def.chain === 'coverage') {
+  if (def.chain === 'rubric' || def.chain === 'coverage' || def.chain === 'review') {
     need(typeof def.rubric === 'string' && def.rubric.length > 0, `${def.chain} cases need a "rubric" file name`);
   }
   return def;
@@ -119,6 +122,7 @@ function rubricObservation(workspace, rubric, caseConfig) {
   return {
     evaluation,
     itemScores: new Map(evaluation.results.map((r) => [r.id, r.score])),
+    itemStatuses: new Map(evaluation.results.map((r) => [r.id, r.status])),
     itemDetails: new Map(evaluation.results.map((r) => [r.id, r.detail])),
     vetoReasons: new Map(evaluation.vetoed.map((v) => [v.id, v.reason])),
     gaps: coverageGaps(rubric),
@@ -151,13 +155,21 @@ export function scoreScanIncident(def, obs) {
 export function scoreRubricIncident(def, obs, scanObs) {
   const item = def.expect.item;
   const itemScore = obs.itemScores.get(item);
-  const viaItem = itemScore === 0;
+  const itemStatus = obs.itemStatuses?.get(item);
+  // A decided 0 is one raw signal; "unverified" is the other — the item
+  // produced no judgment at all, which for an incident case is exactly
+  // the defect under test (missing judge evidence used to be scored 0;
+  // since v0.12.0 it is the unverified state, vetoed fail-closed when
+  // the item is a veto source).
+  const viaItem = itemScore === 0 || itemStatus === 'unverified';
   const viaCheck = def.expect.check ? Boolean(scanFailed(scanObs, def.expect.check.dimension, def.expect.check.name)) : false;
   const vetoReason = obs.vetoReasons.get(item);
   return {
     s1: viaItem || viaCheck,
     s1Note: viaItem
-      ? `item ${item} scored 0 — ${obs.itemDetails.get(item) ?? ''}`
+      ? itemStatus === 'unverified'
+        ? `item ${item} unverified — ${obs.itemDetails.get(item) ?? ''}`
+        : `item ${item} scored 0 — ${obs.itemDetails.get(item) ?? ''}`
       : viaCheck
         ? `scan check ${def.expect.check.dimension}/${def.expect.check.name} failed (the item reading it did not reach 0)`
         : `item ${item} scored ${itemScore ?? 'n/a'} and no answer-key scan check failed — no raw signal`,
@@ -165,6 +177,63 @@ export function scoreRubricIncident(def, obs, scanObs) {
     s2Note: vetoReason ? `veto recorded: ${vetoReason}` : `item ${item} is not in the veto list — its failure (if any) is diluted into the average`,
     s3: obs.evaluation.verdict === 'fail',
     s3Note: `final verdict ${obs.evaluation.verdict.toUpperCase()} (score ${obs.evaluation.score} vs pass ${obs.evaluation.passScore}, reason: ${obs.evaluation.verdictReason})`,
+  };
+}
+
+/**
+ * Review chain: evaluate statically, build the review package, validate
+ * the case's canned review report (if any) under the kernel's anti
+ * self-report rules, and merge. The observation keeps both verdicts —
+ * the static one (what the review layer had to catch) and the merged
+ * one (what the chain finally answers).
+ */
+function reviewObservation(workspace, caseDir, def, rubric, caseConfig) {
+  const config = deepMerge(deepMerge(structuredClone(DEFAULT_CONFIG), structuredClone(EVAL_CONFIG)), caseConfig ?? {});
+  const feature = 'eval-feature';
+  const statik = evaluateRubric(workspace, rubric, config);
+  const pkg = buildReviewPackage(workspace, feature, rubric, statik);
+  let conclusions = new Map();
+  let accepted = [];
+  let problems = [];
+  if (def.review) {
+    const report = JSON.parse(readFileSync(path.join(caseDir, def.review), 'utf8'));
+    // reportAt is pinned to now: fixture freshness is not what is on
+    // trial here — SHA binding and evidence existence are.
+    const verdict = validateReviewReport(workspace, feature, pkg, report, { reportAt: Date.now() });
+    conclusions = verdict.conclusions;
+    accepted = verdict.accepted;
+    problems = verdict.problems;
+  }
+  const merged = evaluateRubric(workspace, rubric, config, { reviewConclusions: conclusions });
+  return {
+    statik,
+    pkg,
+    merged,
+    accepted,
+    problems,
+    itemStatuses: new Map(statik.results.map((r) => [r.id, r.status])),
+    vetoReasons: new Map(statik.vetoed.map((v) => [v.id, v.reason])),
+  };
+}
+
+export function scoreReviewIncident(def, obs) {
+  const item = def.expect.item;
+  const status = obs.itemStatuses.get(item);
+  const vetoReason = obs.vetoReasons.get(item);
+  const held = obs.statik.verdict !== 'pass' && (vetoReason === 'unverified' || obs.statik.verdict === 'incomplete');
+  return {
+    s1: status === 'unverified',
+    s1Note: status === 'unverified'
+      ? `item ${item} is unverified after the static pass — no probe and no evidence decided it`
+      : `item ${item} status is ${status ?? 'n/a'} — the static pass already decided it; nothing for the review layer to catch`,
+    s2: held,
+    s2Note: held
+      ? vetoReason === 'unverified'
+        ? `static verdict ${obs.statik.verdict.toUpperCase()} — item ${item} vetoed with reason "unverified" (fail-closed), and the feature routes to review`
+        : `static verdict INCOMPLETE — the feature is held for review, not passed and not sent to remediation`
+      : `static verdict ${obs.statik.verdict.toUpperCase()} does not hold the feature for this item — the unverified state leaked`,
+    s3: obs.merged.verdict === def.expect.finalVerdict,
+    s3Note: `merged verdict ${obs.merged.verdict.toUpperCase()} (answer key: ${String(def.expect.finalVerdict).toUpperCase()}; accepted: [${obs.accepted.join(', ') || 'none'}]; rejected: ${obs.problems.map((p) => `${p.id} (${p.reason})`).join('; ') || 'none'})`,
   };
 }
 
@@ -210,6 +279,10 @@ export function scoreControl(def, obs) {
   } else if (def.chain === 'coverage') {
     falsePositive = obs.gaps.length > 0;
     for (const g of obs.gaps) noise.push(`coverage gap: ${g.requirement}: ${g.problem}`);
+  } else if (def.chain === 'review') {
+    falsePositive = obs.merged.verdict !== 'pass';
+    for (const id of obs.merged.unverified) noise.push(`item ${id} still unverified after the review merge`);
+    for (const p of obs.problems) noise.push(`review entry ${p.id} rejected: ${p.reason}`);
   }
   return { falsePositive, noise };
 }
@@ -267,6 +340,17 @@ export function runCase({ def, set, caseDir, workspace }) {
     const { falsePositive, noise } = scoreControl(def, obs);
     if (scoped) for (const f of scoped.failedChecks) noise.push(`scan ${f.dim}/${f.check} failed: ${f.why}`);
     return { ...base, falsePositive, noise, detail: noise.length ? noise : [`verdict PASS (score ${obs.evaluation.score})`] };
+  }
+
+  if (def.chain === 'review') {
+    const rubric = loadCaseRubric(caseDir, def);
+    const obs = reviewObservation(workspace, caseDir, def, rubric, def.config);
+    if (def.kind === 'incident') {
+      const stages = scoreReviewIncident(def, obs);
+      return { ...base, stages, blocked: stages.s3, detail: [stages.s1Note, stages.s2Note, stages.s3Note] };
+    }
+    const { falsePositive, noise } = scoreControl(def, obs);
+    return { ...base, falsePositive, noise, detail: noise.length ? noise : [`merged verdict PASS (score ${obs.merged.score})`] };
   }
 
   // prd chain

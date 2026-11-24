@@ -52,6 +52,23 @@ Every item: `id`, `requirement`, `layer` (L1–L4), `level`, `kind`, and a
 `description` stating the observable behavior and threshold. Evidence
 paths go under `.harness/tasks/<feature>/evaluation/judge-<id>.json`.
 
+### Verify modes
+
+Every item also has a verification layer — who or what can actually
+decide it:
+
+| `verify` | Decided by | Notes |
+| --- | --- | --- |
+| `static` (default) | the kernel's probes, or an evaluator's judge evidence | omit the field |
+| `interactive` | a reviewer performing the assertion in a running session | the item MUST carry `assert: { steps: [...], expect: "..." }` — an executable assertion a fresh agent can perform without inventing steps; rubric validation rejects an interactive item without one |
+| `human` | a human's own judgment (taste, sound, feel) | no agent may decide it; it stays unverified until a human records it |
+
+Write the assertion when you write the criterion: if deciding the
+item needs a keyboard event, a continuous interaction, or an end
+state that exists only inside a session, it is `interactive` and the
+steps/expect are part of the contract — not something the reviewer
+should have to reconstruct later.
+
 ### Top-level fields
 
 ```json

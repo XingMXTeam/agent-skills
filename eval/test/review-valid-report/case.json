@@ -1,0 +1,1 @@
+{"chain":"review","id":"test-review-valid-report","kind":"control","review":"review-report.json","rubric":"rubric.json","source":"src/review.js validateReviewReport + merge path; the clean counterpart of test-review-tampered-report","title":"A valid review report merges and the feature passes"}

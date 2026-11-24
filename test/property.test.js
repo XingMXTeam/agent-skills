@@ -84,6 +84,11 @@ function triggeredPitfall(id) {
   return { id, requirement: 'REQ-1', level: 'pitfall', weight: 1, kind: 'grep', path: 'good.txt', pattern: 'real implementation', expect: 'absent' };
 }
 
+/** An item only interaction can decide; with no review conclusions it is unverified by construction. */
+function unverifiedItem(id, level) {
+  return { id, requirement: 'REQ-1', level, weight: 1, kind: 'judge', anchor: 'REF-1', evidence: `ev-${id}.json`, path: 'good.txt', verify: 'interactive', assert: { steps: ['interact with the running app'], expect: 'the interaction visibly takes effect' } };
+}
+
 function evaluate(items) {
   const rubric = { version: 1, feature: 'prop', requirements: [{ id: 'REQ-1', description: 'property fixture' }], items };
   validateRubric(rubric);
@@ -165,6 +170,44 @@ test('property: determinism — the same input evaluates identically twice (200 
     const b = evaluate(items);
     const strip = ({ at, ...rest }) => rest;
     assert.deepEqual(strip(b), strip(a), `seed ${SEED} sample ${s}: repeated evaluation diverged`);
+  }
+});
+
+test('property: an unverified item never lets the verdict pass (200 samples)', () => {
+  const rng = makeRng();
+  const levels = ['essential', 'important', 'optional', 'pitfall'];
+  for (let s = 0; s < SAMPLES; s += 1) {
+    const others = Array.from({ length: rng.int(9) }, (_, i) => passingItem(rng, `P${i}`));
+    const result = evaluate([...others, unverifiedItem('U', rng.pick(levels))]);
+    if (result.verdict === 'pass' || !result.unverified.includes('U')) {
+      assert.fail(`seed ${SEED} sample ${s}: a rubric with an unverified item passed (verdict=${result.verdict})`);
+    }
+  }
+});
+
+test('property: unverified items are excluded from the score denominator (200 samples)', () => {
+  const rng = makeRng();
+  for (let s = 0; s < SAMPLES; s += 1) {
+    const base = Array.from({ length: 1 + rng.int(8) }, (_, i) => passingItem(rng, `P${i}`));
+    const passing = evaluate(base);
+    assert.equal(passing.verdict, 'pass', `seed ${SEED} sample ${s}: all-passing rubric must pass`);
+    const withPending = evaluate([...base, unverifiedItem('U', 'important')]);
+    if (withPending.score !== passing.score || withPending.verdict !== 'incomplete') {
+      assert.fail(`seed ${SEED} sample ${s}: appending an unverified item moved the score (${passing.score} -> ${withPending.score}) or the verdict (${withPending.verdict})`);
+    }
+  }
+});
+
+test('property: an unverified veto source fails closed with reason "unverified" (200 samples)', () => {
+  const rng = makeRng();
+  for (let s = 0; s < SAMPLES; s += 1) {
+    const level = s % 2 === 0 ? 'essential' : 'pitfall';
+    const others = Array.from({ length: rng.int(9) }, (_, i) => passingItem(rng, `P${i}`));
+    const result = evaluate([unverifiedItem('VETO', level), ...others]);
+    const veto = result.vetoed.find((v) => v.id === 'VETO');
+    if (result.verdict !== 'fail' || result.verdictReason !== 'veto' || veto?.reason !== 'unverified') {
+      assert.fail(`seed ${SEED} sample ${s}: unverified ${level} item did not fail closed (verdict=${result.verdict}, veto=${JSON.stringify(veto)})`);
+    }
   }
 });
 

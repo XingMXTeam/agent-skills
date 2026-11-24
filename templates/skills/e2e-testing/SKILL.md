@@ -64,6 +64,17 @@ Tools: Playwright <version>; capture run <id> (status pass, 6 pages)
 ## Rubric (judge items)
 | id | layer | level | score | reason | artifacts |
 
+## The interactive boundary
+
+Items marked `verify: "interactive"` are NOT decided here. A journey
+you can script and assert in a spec belongs in this report; an
+assertion whose truth exists only inside a live interaction —
+keyboard events landing, continuous manipulation, an end state —
+belongs to the review phase (`interactive-review` skill), performed
+by the reviewer against the running app. If you find yourself
+approximating such an item from a spec run or a screenshot, stop:
+leave it unverified and let the review package carry it.
+
 ## Comparison with references
 | dimension | REF-n | ours | gap | fix | rubric id |
 

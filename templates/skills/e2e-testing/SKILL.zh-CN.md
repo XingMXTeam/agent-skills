@@ -36,6 +36,10 @@ Tools: Playwright <版本>; capture run <id> (status pass, 6 pages)
 ## Rubric (judge items)
 | id | layer | level | score | reason | artifacts |
 
+## 交互边界
+
+标了 `verify: "interactive"` 的条目不在这里判定。能写成 spec 并断言的旅程归这份报告；真相只存在于实时交互中的断言——键盘事件是否落地、连续操作、终局状态——归 review 阶段（`interactive-review` skill），由 reviewer 对运行中的应用执行。若发现自己在用 spec 运行或截图近似这种条目，停：让它保持未验证，交给复核任务包带走。
+
 ## Comparison with references
 | dimension | REF-n | ours | gap | fix | rubric id |
 

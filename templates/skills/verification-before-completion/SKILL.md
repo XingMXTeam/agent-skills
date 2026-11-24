@@ -25,6 +25,7 @@ Before any claim of success **or** failure:
 | developer | task / fix done | the task's checks + its tests, fresh, with counts; `git rev-parse --short HEAD` |
 | evaluator | API behavior verified | the real request and response, captured this run |
 | evaluator | a journey works / a page looks right | a real browser run this session: Playwright spec output and `harness capture` screenshots (manifest status `pass`) |
+| reviewer | an interactive assertion holds | the performed run's evidence (screenshot / trace under `review/`), with every target artifact listed and its current SHA-256 in `artifactSha`; an assertion not performed is reported as unverified, never as passed |
 | planner | contract complete | `harness clarify-done` / `replan-done` output |
 
 A failure claim needs the same quality of evidence, quoted in the role's

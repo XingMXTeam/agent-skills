@@ -95,7 +95,8 @@ test('judge evidence: cited verify runs are checked; requireVerify rejects self-
   write({ score: 1, note: 'looks right' });
   assert.equal(runItem(dir, judge, 5000, new Map(), {}).score, 1, 'off by default');
   const noCite = runItem(dir, judge, 5000, new Map(), { requireVerify: true });
-  assert.equal(noCite.score, 0);
+  assert.equal(noCite.status, 'unverified', 'a self-report without a cited verify run is not evidence — unverified, not failed');
+  assert.equal(noCite.score, null);
   assert.match(noCite.detail, /cites no verify run/);
 
   write({ score: 1, note: 'ok', verify: ['unit'] });

@@ -1,7 +1,7 @@
 import { spawnSync } from 'node:child_process';
 import { loadState } from './state.js';
 import { nextAction, tryLoadRubric } from './orchestrate.js';
-import { buildRolePacket, roleFor, roleInstructions, evaluatorLeaks } from './roles.js';
+import { buildRolePacket, roleFor, roleInstructions, evaluatorLeaks, reviewerLeaks } from './roles.js';
 
 /**
  * The driver: what turns the kernel into a long-running system.
@@ -46,6 +46,7 @@ export function stateSignature(state) {
     passes: state.consecutivePasses,
     remediation: state.remediation ?? [],
     remediationFixed: state.remediationFixedAt ?? null,
+    review: (state.lastReview?.pending ?? []).join(','),
     refinements: (state.pendingRefinements ?? []).length,
     lastEval: state.lastEvaluation ? `${state.lastEvaluation.verdict}:${state.lastEvaluation.score}` : null,
   });
@@ -101,7 +102,7 @@ export function makeAgentExec(template, { stepTimeoutMs }) {
   };
 }
 
-const AGENT_ACTIONS = new Set(['implement-task', 'remediate', 'replan', 'confirm-evaluation']);
+const AGENT_ACTIONS = new Set(['implement-task', 'remediate', 'replan', 'confirm-evaluation', 'review']);
 
 function hasJudgeItems(root, feature) {
   return Boolean(tryLoadRubric(root, feature)?.items?.some((i) => i.kind === 'judge'));
@@ -169,11 +170,11 @@ export function runLoop(root, feature, config, deps, opts = {}) {
       if (steps >= maxSteps) return finish('max-steps', `agent step budget of ${maxSteps} exhausted — re-run \`harness run ${feature}\` to continue from state`);
       const before = stateSignature(state);
       const packet = buildPacket(root, state, action, { stepId: `${feature}:${state.macroCycle.current}:${steps + 1}:${action.action}` });
-      if (packet.role === 'evaluator') {
+      if (packet.role === 'evaluator' || packet.role === 'reviewer') {
         // Tripwire: the isolation is a property of the packet. If the
         // implementer's record ever reaches it, stop rather than score.
-        const leaks = evaluatorLeaks(root, state, packet);
-        if (leaks.length) return finish('blocked', `evaluator packet would leak implementer records: ${leaks.join(', ')}`);
+        const leaks = packet.role === 'evaluator' ? evaluatorLeaks(root, state, packet) : reviewerLeaks(root, state, packet);
+        if (leaks.length) return finish('blocked', `${packet.role} packet would leak implementer records: ${leaks.join(', ')}`);
       }
       const r = deps.execAgent(root, packet);
       steps += 1;
@@ -187,11 +188,13 @@ export function runLoop(root, feature, config, deps, opts = {}) {
       failures = 0;
       // A fresh confirmation evaluation is kernel work once the agent has
       // produced its evidence — run it here so the loop actually closes.
-      if (action.action === 'confirm-evaluation' || action.action === 'evaluate') {
-        const er = deps.execKernel(root, ['eval', feature, '--json']);
+      // A review step closes the same way, through the merge.
+      if (action.action === 'confirm-evaluation' || action.action === 'evaluate' || action.action === 'review') {
+        const kernelCmd = action.action === 'review' ? ['review-merge', feature, '--json'] : ['eval', feature, '--json'];
+        const er = deps.execKernel(root, kernelCmd);
         let verdict = null;
         try { verdict = JSON.parse(er.stdout).evaluation.verdict; } catch { /* below */ }
-        if (!verdict) return finish('blocked', 'confirmation eval produced no parseable verdict');
+        if (!verdict) return finish('blocked', `${kernelCmd[0]} produced no parseable verdict`);
         log.push({ step: steps, action: action.action, agentExit: 0, evalVerdict: verdict });
         onStep(log[log.length - 1]);
         continue;

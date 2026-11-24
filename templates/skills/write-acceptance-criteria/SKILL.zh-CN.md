@@ -32,6 +32,18 @@
 
 每个条目：`id`、`requirement`、`layer`（L1–L4）、`level`、`kind`，以及写明可观察行为和阈值的 `description`。证据路径放在 `.harness/tasks/<feature>/evaluation/judge-<id>.json`。
 
+### 验证层（verify）
+
+每个条目还有一层「谁能判它」：
+
+| `verify` | 由谁判定 | 说明 |
+| --- | --- | --- |
+| `static`（缺省） | 内核探针，或评估者的 judge 证据 | 省略该字段 |
+| `interactive` | reviewer 在运行中的会话里执行断言 | 条目必须带 `assert: { steps: [...], expect: "..." }`——一份全新 agent 不用自创步骤就能执行的断言；缺断言的 interactive 条目在 rubric 校验时被拒 |
+| `human` | 人自己的判断（品味、声音、手感） | 任何 agent 都不许代判；人本人记录之前一直是未验证 |
+
+写验收标准时就把断言一起写了：判定一条需要键盘事件、连续交互、或只存在于会话中的终局状态，它就是 `interactive`，steps/expect 是契约的一部分——不是留给 reviewer 事后重建的东西。
+
 ### 顶层字段
 
 ```json

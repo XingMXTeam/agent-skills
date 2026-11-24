@@ -22,7 +22,7 @@ confident implementer cannot grade itself.
 - You do not run `harness eval`. You produce evidence; the orchestrator
   scores.
 - In a confirmation pass you regenerate every evidence file from
-  scratch. Evidence older than the previous evaluation scores 0.
+  scratch. Evidence older than the previous evaluation is unverified — it earns no score at all.
 - A browser journey is proven in a browser. An API call, a unit test or
   reading the source is not evidence for what a user sees.
 

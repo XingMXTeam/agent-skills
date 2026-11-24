@@ -5,6 +5,7 @@ import { ANCHOR_ID } from './vision.js';
 
 export const LEVELS = ['essential', 'important', 'optional', 'pitfall'];
 export const KINDS = ['command', 'file', 'grep', 'judge', 'scan', 'verify'];
+export const VERIFY_MODES = ['static', 'interactive', 'human'];
 export const SCAN_DIMENSIONS = ['structure', 'data', 'logic', 'ui', 'e2e'];
 
 export const LAYERS = ['L1', 'L2', 'L3', 'L4'];
@@ -61,6 +62,26 @@ export function validateRubric(rubric) {
     itemIds.add(it.id);
     if (!LEVELS.includes(it.level)) throw new Error(`Item ${it.id}: level must be one of ${LEVELS.join('/')}.`);
     if (!KINDS.includes(it.kind)) throw new Error(`Item ${it.id}: kind must be one of ${KINDS.join('/')}.`);
+    // Verification mode: how this item's verdict is earned. Absent means
+    // static (the kernel decides it, or reads judge evidence) — rubrics
+    // written before v0.12 keep working unchanged. interactive/human
+    // items are decided in the review phase, never by the static pass.
+    if (it.verify !== undefined && !VERIFY_MODES.includes(it.verify)) {
+      throw new Error(`Item ${it.id}: verify must be one of ${VERIFY_MODES.join('/')} (got "${it.verify}").`);
+    }
+    if (it.verify === 'interactive') {
+      // An interactive item without an executable assertion is a review
+      // nobody can perform — the same denominator discipline as the e2e
+      // category gate: name the actions and the expected state, or the
+      // item does not count as a check at all.
+      const a = it.assert;
+      if (!a || typeof a !== 'object' || !Array.isArray(a.steps) || a.steps.length === 0 || !a.steps.every((s) => typeof s === 'string' && s.trim())) {
+        throw new Error(`Item ${it.id}: verify=interactive needs assert.steps — a non-empty list of actions the reviewer performs (e.g. ["click #start", "wait 3s"]).`);
+      }
+      if (typeof a.expect !== 'string' || !a.expect.trim()) {
+        throw new Error(`Item ${it.id}: verify=interactive needs assert.expect — the observable state that must hold after the steps (e.g. "the timer display shows a smaller number than at start").`);
+      }
+    }
     if (it.requirement && !reqIds.has(it.requirement)) {
       throw new Error(`Item ${it.id}: maps to unknown requirement "${it.requirement}".`);
     }
@@ -98,6 +119,17 @@ export function validateRubric(rubric) {
  */
 export function coverageGaps(rubric) {
   const gaps = [];
+  // An interactive item whose assertion is missing cannot be reviewed —
+  // validateRubric throws on it, but coverage re-checks so a rubric that
+  // reached this gate unvalidated still cannot smuggle one through.
+  for (const it of rubric.items) {
+    if (it.verify === 'interactive') {
+      const a = it.assert;
+      if (!a || !Array.isArray(a.steps) || a.steps.length === 0 || typeof a.expect !== 'string' || !a.expect.trim()) {
+        gaps.push({ requirement: it.requirement ?? '*', problem: `item ${it.id}: verify=interactive without an executable assert (steps + expect) — a review item nobody can perform is a hole in the denominator` });
+      }
+    }
+  }
   const minPitfalls = rubric.policy?.minPitfallsPerRequirement ?? 0;
   for (const req of rubric.requirements) {
     const mapped = rubric.items.filter((i) => i.requirement === req.id && i.level !== 'pitfall');

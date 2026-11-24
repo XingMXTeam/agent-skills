@@ -24,15 +24,15 @@ import { runItem } from '../src/evaluate.js';
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const EVAL_ROOT = path.join(HERE, '..', 'eval');
 
-test('eval set: 12 cases, tuning/test split, 8 incidents and 4 controls', () => {
+test('eval set: 15 cases, tuning/test split, 10 incidents and 5 controls', () => {
   const cases = discoverCases(EVAL_ROOT);
-  assert.equal(cases.length, 12);
+  assert.equal(cases.length, 15);
   assert.equal(cases.filter((c) => c.set === 'tuning').length, 6);
-  assert.equal(cases.filter((c) => c.set === 'test').length, 6);
-  assert.equal(cases.filter((c) => c.def.kind === 'incident').length, 8);
-  assert.equal(cases.filter((c) => c.def.kind === 'control').length, 4);
+  assert.equal(cases.filter((c) => c.set === 'test').length, 9);
+  assert.equal(cases.filter((c) => c.def.kind === 'incident').length, 10);
+  assert.equal(cases.filter((c) => c.def.kind === 'control').length, 5);
   const ids = new Set(cases.map((c) => c.def.id));
-  assert.equal(ids.size, 12, 'case ids are unique');
+  assert.equal(ids.size, 15, 'case ids are unique');
 });
 
 test('eval set: the smoke subset is marked in the data and stays small', () => {

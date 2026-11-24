@@ -17,6 +17,7 @@ import { DEFAULT_CONFIG, HARNESS_DIR, configPath, featureDir, harnessDir, loadCo
 import { createState, loadState, saveState, record, withLock } from '../src/state.js';
 import { loadRubric, rubricPath } from '../src/rubric.js';
 import { evaluateRubric, writeReport, runGateCommands } from '../src/evaluate.js';
+import { buildReviewPackage, writeReviewPackage, loadReviewConclusions, mergeReview } from '../src/review.js';
 import { nextAction, applyEvaluation, checkCoverage, VERDICT_ROUTES } from '../src/orchestrate.js';
 import { loadVision } from '../src/vision.js';
 import { collectRefinements, recordRefinements, rubricFingerprint, rubricLevels, looseningChanges, checkDecisions } from '../src/refine.js';
@@ -270,7 +271,7 @@ function cmdInit() {
     made.push(...pack.installed.map((n) => `.claude/skills/${n}`));
     skipped.push(...pack.skipped.map((n) => `.claude/skills/${n}`));
     write(path.join(harnessDir(root), 'host-setup.md'),
-      '# Claude Code host setup\n\nRegister the session-start hook in `.claude/settings.json`:\n\n```json\n{\n  "hooks": {\n    "SessionStart": [{ "hooks": [{ "type": "command", "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/session-start.sh" }] }]\n  }\n}\n```\n\nThe `harness` skill is already installed at `.claude/skills/harness/SKILL.md`, the three role agents (planner, developer, evaluator) at `.claude/agents/`, and the bundled skills pack (the authoring chain clarify-requirements → write-acceptance-criteria, implement-task, e2e-testing, …) alongside them. Manage the pack with `harness skills list|install`.\n\nThe main session is the orchestrator: it runs `harness next`, dispatches the role agent the action names (`harness packet <feature>` prints that agent\'s input), and runs the kernel commands. It does not do role work itself.\n');
+      '# Claude Code host setup\n\nRegister the session-start hook in `.claude/settings.json`:\n\n```json\n{\n  "hooks": {\n    "SessionStart": [{ "hooks": [{ "type": "command", "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/session-start.sh" }] }]\n  }\n}\n```\n\nThe `harness` skill is already installed at `.claude/skills/harness/SKILL.md`, the four role agents (planner, developer, evaluator, reviewer) at `.claude/agents/`, and the bundled skills pack (the authoring chain clarify-requirements → write-acceptance-criteria, implement-task, e2e-testing, …) alongside them. Manage the pack with `harness skills list|install`.\n\nThe main session is the orchestrator: it runs `harness next`, dispatches the role agent the action names (`harness packet <feature>` prints that agent\'s input), and runs the kernel commands. It does not do role work itself.\n');
   } else {
     if (!has('--no-wire')) {
       const md = upsertBlock(path.join(root, 'AGENTS.md'), protocolBlock());
@@ -280,7 +281,7 @@ function cmdInit() {
     for (const role of ROLES) write(path.join(harnessDir(root), 'agents', `${role}.md`), `${roleInstructions(role)}\n`);
     write(path.join(harnessDir(root), 'protocol.md'), `${stripFrontMatter(readFileSync(path.join(TEMPLATES, 'claude-code', 'SKILL.md'), 'utf8')).trim()}\n`);
     write(path.join(harnessDir(root), 'host-setup.md'),
-      `# Host setup (${host})\n\nAdd this to your agent instructions file (AGENTS.md or equivalent):\n\n> At the start of every session run \`harness next <feature>\` and follow the returned action. The rules are in \`.harness/protocol.md\`. Each action belongs to one role — clarify/replan: planner, implement-task/remediate: developer, evaluate/confirm-evaluation: evaluator — whose instructions are in \`.harness/agents/<role>.md\`. When your host supports separate sessions or sub-agents, run each role in its own context and give it only \`harness packet <feature>\`. Never stop at a summary: after every verdict, run the next action.\n\nThe authoring and evaluation skills are installable with \`harness skills install --dir <your skills dir>\`; their text is plain Markdown any host can read.\n`);
+      `# Host setup (${host})\n\nAdd this to your agent instructions file (AGENTS.md or equivalent):\n\n> At the start of every session run \`harness next <feature>\` and follow the returned action. The rules are in \`.harness/protocol.md\`. Each action belongs to one role — clarify/replan: planner, implement-task/remediate: developer, evaluate/confirm-evaluation: evaluator, review: reviewer — whose instructions are in \`.harness/agents/<role>.md\`. When your host supports separate sessions or sub-agents, run each role in its own context and give it only \`harness packet <feature>\`. Never stop at a summary: after every verdict, run the next action.\n\nThe authoring and evaluation skills are installable with \`harness skills install --dir <your skills dir>\`; their text is plain Markdown any host can read.\n`);
   }
 
   print({ ok: true, stack, host, gateCommands: config.gateCommands, detected: why, created: made, skipped },
@@ -441,6 +442,8 @@ async function cmdDone() {
     case 'evaluate':
     case 'confirm-evaluation':
       route('eval'); await cmdEval(); return;
+    case 'review':
+      route('review-merge'); await cmdReviewMerge(); return;
     case 'human-decision':
       fail(`Paused: ${action.reason}. A human reviews the last report, then runs: fh resume`);
     case 'none':
@@ -543,11 +546,16 @@ async function cmdEval() {
       state.lastEvaluation ? { at: state.lastEvaluation.at, why: 'the previous evaluation' } : null,
     ].filter(Boolean).sort((a, b) => b.at - a.at);
     const fresh = candidates[0] ?? null;
+    // A validated review report from a previous review round resolves
+    // interactive/human items here too — same validation, same merge.
+    const review = loadReviewConclusions(root, feature, rubric);
     const evaluation = evaluateRubric(root, rubric, config, {
       freshSince: fresh?.at ?? null,
       freshReason: fresh?.why ?? null,
       vision: loadVision(root, feature),
+      reviewConclusions: review.conclusions,
     });
+    if (review.pkg) evaluation.review = { packageAt: review.pkg.generatedAt, accepted: review.accepted, problems: review.problems };
 
     // Rubric evolution: the evaluator's suggestions are recorded, never lost.
     const refinements = collectRefinements(root, feature, rubric);
@@ -566,7 +574,73 @@ async function cmdEval() {
     routing.next = next.action;
     verdict = evaluation.verdict;
     print({ evaluation, gate: gateResult, routing, reportFile: path.relative(root, reportFile) },
-      `Evaluation: ${evaluation.verdict.toUpperCase()} score=${evaluation.score} (pass >= ${evaluation.passScore})${evaluation.layers ? ` layers ${Object.entries(evaluation.layers).map(([k, v]) => `${k}=${v.score}`).join(' ')}` : ''}${evaluation.vetoed.length ? `\nVETOED: ${evaluation.vetoed.map((v) => `${v.id} — ${v.reason}`).join('; ')}` : ''}${added.length ? `\nRubric refinement suggestions recorded: ${added.map((a) => a.id).join(', ')}` : ''}${refinements.invalid.length ? `\nIgnored malformed suggestions: ${refinements.invalid.map((i) => `${i.source}: ${i.error}`).join('; ')}` : ''}\nRouted: ${routing.routed}${routing.reason ? ` (${routing.reason})` : ''}\nReport: ${path.relative(root, reportFile)}\nPhase now: ${state.phase}. ${next.action === 'none' ? 'Feature done — report it: harness report ' + feature : next.action === 'human-decision' ? 'Paused — surface the reason to the user.' : `Next action: ${next.action} — dispatch it now; do not stop at this summary.`}`);
+      `Evaluation: ${evaluation.verdict.toUpperCase()} score=${evaluation.score} (pass >= ${evaluation.passScore})${evaluation.layers ? ` layers ${Object.entries(evaluation.layers).map(([k, v]) => `${k}=${v.score}`).join(' ')}` : ''}${evaluation.vetoed.length ? `\nVETOED: ${evaluation.vetoed.map((v) => `${v.id} — ${v.reason}`).join('; ')}` : ''}${evaluation.unverified?.length ? `\nUNVERIFIED (not scored — decided by fresh judge evidence or in the review phase): ${evaluation.unverified.join(', ')}` : ''}${added.length ? `\nRubric refinement suggestions recorded: ${added.map((a) => a.id).join(', ')}` : ''}${refinements.invalid.length ? `\nIgnored malformed suggestions: ${refinements.invalid.map((i) => `${i.source}: ${i.error}`).join('; ')}` : ''}\nRouted: ${routing.routed}${routing.reason ? ` (${routing.reason})` : ''}\nReport: ${path.relative(root, reportFile)}\nPhase now: ${state.phase}. ${next.action === 'none' ? 'Feature done — report it: harness report ' + feature : next.action === 'human-decision' ? 'Paused — surface the reason to the user.' : `Next action: ${next.action} — dispatch it now; do not stop at this summary.`}`);
+  });
+  if (verdict !== 'pass') process.exitCode = 1;
+}
+
+// ─── review: package the unverified, merge the reviewed ─────────────────────
+async function cmdReviewPack() {
+  const feature = process.argv[3];
+  if (!feature) fail('Usage: harness review-pack <feature>');
+  requireRole('review-pack', []);
+  loadConfig(root);
+  await withLock(root, feature, async () => {
+    const state = loadState(root, feature);
+    const reportFile = path.join(featureDir(root, feature), 'evaluation', 'report.json');
+    if (!existsSync(reportFile)) fail(`No evaluation report for "${feature}" yet — the review package is built from an evaluation. Run: harness eval ${feature}`);
+    const evaluation = JSON.parse(readFileSync(reportFile, 'utf8'));
+    const rubric = loadRubric(root, feature);
+    const pkg = buildReviewPackage(root, feature, rubric, evaluation);
+    if (!pkg.items.length) fail(`The last evaluation (verdict ${evaluation.verdict}) has no unverified interactive/human items — nothing to review.`);
+    const file = writeReviewPackage(root, feature, pkg);
+    state.lastReview = { ...(state.lastReview ?? {}), at: state.lastReview?.at ?? evaluation.at, verdict: evaluation.verdict, pending: pkg.items.map((i) => i.id), packageAt: pkg.generatedAt };
+    record(state, { event: 'review-package', items: pkg.items.map((i) => i.id) });
+    saveState(root, state);
+    print({ package: pkg, packageFile: path.relative(root, file) },
+      `Review package for "${feature}": ${pkg.items.length} item(s) — ${pkg.items.map((i) => `${i.id} (${i.verify})`).join(', ')}\nWritten: ${path.relative(root, file)}\nDispatch the reviewer with: harness packet ${feature}\nThe reviewer writes the report; then you run: harness review-merge ${feature}`);
+  });
+}
+
+async function cmdReviewMerge() {
+  const feature = process.argv[3];
+  if (!feature) fail('Usage: harness review-merge <feature>');
+  requireRole('review-merge', []);
+  const config = loadConfig(root);
+  let verdict = null;
+  await withLock(root, feature, async () => {
+    const state = loadState(root, feature);
+    if (!state.clarificationComplete) fail('Clarification is not complete; a review merge has no anchor yet. Finish clarify, then harness clarify-done.');
+    const rubric = loadRubric(root, feature);
+    // Project rules veto every feature, exactly as in `harness eval`.
+    const projectRules = loadProjectRules(root).filter((r) => !rubric.items.some((i) => i.id === r.id));
+    rubric.items.push(...projectRules);
+    const lastWork = [...state.history].reverse().find((h) => ['task-done', 'remediation-fixed', 'replanned'].includes(h.event));
+    const candidates = [
+      lastWork ? { at: lastWork.at, why: `${lastWork.event}${lastWork.task ? ` ${lastWork.task}` : ''}` } : null,
+      state.lastEvaluation ? { at: state.lastEvaluation.at, why: 'the previous evaluation' } : null,
+    ].filter(Boolean).sort((a, b) => b.at - a.at);
+    const fresh = candidates[0] ?? null;
+    const { evaluation, accepted, problems, pkg } = mergeReview(root, feature, rubric, config, {
+      freshSince: fresh?.at ?? null,
+      freshReason: fresh?.why ?? null,
+      vision: loadVision(root, feature),
+    });
+    if (!pkg) fail(`No review package for "${feature}". Run: harness review-pack ${feature}`);
+    const reportFile = writeReport(root, feature, evaluation);
+    const willFinish = state.phase === 'verify' || state.consecutivePasses + 1 >= config.autoStop.requiredStablePasses;
+    const gateResult = evaluation.verdict === 'pass' && willFinish
+      ? runGateCommands(root, config)
+      : { passed: true, failedAt: null, steps: [], skipped: true };
+    const routing = applyEvaluation(root, state, config, evaluation, gateResult);
+    state.lastReview = { at: evaluation.at, verdict: evaluation.verdict, pending: evaluation.unverified ?? [], packageAt: pkg.generatedAt, accepted, problems };
+    record(state, { event: 'review-merged', verdict: evaluation.verdict, accepted, rejected: problems.map((p) => p.id) });
+    saveState(root, state);
+    const next = nextAction(root, state, config);
+    routing.next = next.action;
+    verdict = evaluation.verdict;
+    print({ evaluation, gate: gateResult, routing, reportFile: path.relative(root, reportFile) },
+      `Review merge: ${evaluation.verdict.toUpperCase()} score=${evaluation.score} (pass >= ${evaluation.passScore})\nAccepted conclusions: ${accepted.join(', ') || 'none'}${problems.length ? `\nStill unverified: ${problems.map((p) => `${p.id} — ${p.reason}`).join('; ')}` : ''}${evaluation.vetoed.length ? `\nVETOED: ${evaluation.vetoed.map((v) => `${v.id} — ${v.reason}`).join('; ')}` : ''}\nRouted: ${routing.routed}${routing.reason ? ` (${routing.reason})` : ''}\nReport: ${path.relative(root, reportFile)}\nPhase now: ${state.phase}. ${next.action === 'none' ? 'Feature done — report it: harness report ' + feature : `Next action: ${next.action} — dispatch it now; do not stop at this summary.`}`);
   });
   if (verdict !== 'pass') process.exitCode = 1;
 }
@@ -856,6 +930,8 @@ try {
     case 'status': cmdStatus(); break;
     case 'task-done': await cmdTaskDone(); break;
     case 'eval': await cmdEval(); break;
+    case 'review-pack': await cmdReviewPack(); break;
+    case 'review-merge': await cmdReviewMerge(); break;
     case 'gate': cmdGate(); break;
     case 'resume': await cmdResume(); break;
     case 'report': cmdReport(); break;
@@ -904,6 +980,12 @@ Usage:
                                         Pixel diff (pixelmatch) vs baselines; no baseline is
                                         reported as no-baseline (exit 2), never as a pass
   harness eval <feature> [--json]       Run rubric evaluation (veto rules apply), route the loop
+  harness review-pack <feature>         Build the review package from the last evaluation: the
+                                        unverified interactive/human items, their assertions and
+                                        target-artifact SHA-256s, frozen for the reviewer
+  harness review-merge <feature>        Validate the review report (freshness, evidence, SHA
+                                        binding, human attestation) and merge its conclusions
+                                        into a fresh evaluation; routes the loop like eval
   harness gate                          Run configured delivery-gate commands, fail-fast
   harness verify [--only a,b] [--json]  Run .harness/verify.json checks; records exit/sha/output in
                                         .harness/verify/last.json — the only verify evidence judges may cite

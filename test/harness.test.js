@@ -137,7 +137,7 @@ test('pitfall: forbidden pattern in the deliverable vetoes the evaluation', () =
   assert.ok(out.evaluation.vetoed.some((v) => v.id === 'RB-3'));
 });
 
-test('judge items score 0 without evidence and pass with evidence', () => {
+test('judge items are unverified without evidence and pass with evidence', () => {
   const dir = freshProject();
   const feature = readyFeature(dir);
   const rubric = JSON.parse(readFileSync(path.join(dir, '.harness', 'tasks', feature, 'rubric.json'), 'utf8'));
@@ -145,8 +145,10 @@ test('judge items score 0 without evidence and pass with evidence', () => {
   writeFileSync(path.join(dir, '.harness', 'tasks', feature, 'rubric.json'), JSON.stringify(rubric, null, 2));
   run(dir, ['task-done', feature, 'TASK-1']);
   const r1 = run(dir, ['eval', feature, '--json'], false);
-  assert.equal(JSON.parse(r1.stdout).evaluation.results.find((x) => x.id === 'RB-J').score, 0);
-  // Remediation cycle: write the judge evidence, re-eval (state is in implement/remediate).
+  const rbj1 = JSON.parse(r1.stdout).evaluation.results.find((x) => x.id === 'RB-J');
+  assert.equal(rbj1.status, 'unverified', 'no evidence is "not yet verified", not a 0 — the verdict is incomplete, not failed');
+  assert.equal(rbj1.score, null);
+  // Write the judge evidence, re-eval (the feature is still in implement).
   mkdirSync(path.join(dir, '.harness', 'tasks', feature, 'evaluation'), { recursive: true });
   writeFileSync(path.join(dir, '.harness', 'tasks', feature, 'evaluation', 'judge-rb-j.json'), JSON.stringify({ score: 1, note: 'checked against REQ-1' }));
   setAutoStop(dir, 1);

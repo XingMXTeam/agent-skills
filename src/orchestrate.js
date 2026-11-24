@@ -43,8 +43,12 @@ export function nextAction(root, state, config) {
       }
       return { ...base, action: 'evaluate', instruction: (state.remediation?.length ? 'The remediation is recorded. ' : 'All tasks are recorded done. ') + 'Dispatch the evaluator (fresh context) to produce judge evidence, then run: harness eval ' + state.feature };
     }
+    case 'review': {
+      const pending = state.lastReview?.pending ?? [];
+      return { ...base, action: 'review', items: pending, instruction: `The last evaluation left ${pending.length} item(s) unverified (interactive/human): ${pending.join(', ') || 'none recorded'}. If no fresh review package exists, run: harness review-pack ${state.feature}. Then dispatch the reviewer (fresh context, operating capability) with the package — it performs each item's assertion and writes the review report. Human items wait for a human's own report entries. Then run: harness review-merge ${state.feature}` };
+    }
     case 'verify': {
-      return { ...base, action: 'confirm-evaluation', instruction: 'A first full pass is recorded. Get a FRESH independent evaluation (new evaluator context; regenerate every judge evidence file — evidence older than the previous evaluation scores 0), then run: harness eval ' + state.feature };
+      return { ...base, action: 'confirm-evaluation', instruction: 'A first full pass is recorded. Get a FRESH independent evaluation (new evaluator context; regenerate every judge evidence file — evidence older than the previous evaluation is unverified), then run: harness eval ' + state.feature };
     }
     case 'paused': {
       return { ...base, action: 'human-decision', reason: state.pauseReason ?? 'budget exhausted', instruction: 'The harness paused itself instead of burning more cycles. A human must review the last evaluation report, then either raise budgets in harness.config.json or run: harness resume ' + state.feature };
@@ -69,9 +73,36 @@ export function tryLoadRubric(root, feature) {
 export function applyEvaluation(root, state, config, evaluation, gateResult) {
   state.remediationFixedAt = null;
   state.lastEvaluation = { at: evaluation.at, verdict: evaluation.verdict, score: evaluation.score, vetoed: evaluation.vetoed };
-  const openItems = evaluation.results.filter((r) => r.score < 1).map((r) => r.id);
 
   if (evaluation.verdict !== 'pass') {
+    const results = evaluation.results ?? [];
+    const unverifiedIds = evaluation.unverified ?? results.filter((r) => r.status === 'unverified').map((r) => r.id);
+    const pendingReview = results
+      .filter((r) => r.status === 'unverified' && (r.verify === 'interactive' || r.verify === 'human'))
+      .map((r) => r.id);
+    // Unverified work is nobody's homework yet: it routes to the review
+    // phase (interactive/human items) or back to the evaluator (judge
+    // evidence only) — never to the developer. Sending an unverified
+    // item into remediation is how teams burn cycles "fixing" code that
+    // was never shown to be broken.
+    if (pendingReview.length) {
+      state.consecutivePasses = 0;
+      state.remediation = [];
+      state.lastReview = { at: evaluation.at, verdict: evaluation.verdict, pending: unverifiedIds, packageAt: state.lastReview?.packageAt ?? null };
+      record(state, { event: 'routed-to-review', verdict: evaluation.verdict, pending: unverifiedIds });
+      state.phase = 'review';
+      return { routed: 'review', pendingReview: unverifiedIds, verdict: evaluation.verdict };
+    }
+    if (evaluation.verdict === 'incomplete') {
+      state.consecutivePasses = 0;
+      state.remediation = [];
+      record(state, { event: 'evaluation-incomplete', pendingEvidence: unverifiedIds });
+      return { routed: 're-evaluate', pendingEvidence: unverifiedIds, reason: 'only judge evidence is missing or unusable — a fresh evaluator produces it; nothing here is the developer\'s to fix' };
+    }
+    // Genuine failure. Unverified items (judge evidence only — the
+    // interactive/human ones routed to review above) are not open
+    // items: the developer cannot fix a judgment nobody has made.
+    const openItems = results.filter((r) => r.status !== 'unverified' && r.score < 1).map((r) => r.id);
     state.consecutivePasses = 0;
     state.lastFailure = { at: evaluation.at, kind: 'evaluation', vetoed: evaluation.vetoed, openItems };
     appendFailureLog(root, state.feature, `evaluation failed score=${evaluation.score} vetoed=${evaluation.vetoed.map((v) => v.id).join(',') || 'none'} open=${openItems.join(',')}`);
@@ -182,6 +213,11 @@ export const VERDICT_ROUTES = [
   { when: 'eval pass, stable passes still needed', phase: 'verify', next: 'confirm-evaluation', who: 'evaluator (fresh context)' },
   { when: 'eval pass, stable passes met, delivery gate green', phase: 'done', next: 'none', who: 'report to the user' },
   { when: 'eval pass, delivery gate red', phase: 'implement', next: 'remediate', who: 'developer' },
+  { when: 'eval incomplete or vetoed only by unverified interactive/human items', phase: 'review', next: 'review', who: 'reviewer (fresh context); human items wait for a human' },
+  { when: 'review merge pass', phase: 'verify', next: 'confirm-evaluation', who: 'evaluator (fresh context)' },
+  { when: 'review merge fail (a reviewed item failed, or a veto stands)', phase: 'implement', next: 'remediate', who: 'developer' },
+  { when: 'review merge still incomplete (items remain unverified)', phase: 'review', next: 'review', who: 'reviewer; human items wait for a human' },
+  { when: 'eval incomplete, judge evidence only (missing, stale or unusable)', phase: 'implement', next: 'evaluate', who: 'evaluator (fresh context)' },
   { when: 'eval fail (veto or below passScore), refinement suggestions filed', phase: 'implement', next: 'replan', who: 'planner' },
   { when: 'eval fail (veto or below passScore), no suggestions', phase: 'implement', next: 'remediate', who: 'developer' },
   { when: 'eval fail, macro-cycle budget exhausted', phase: 'paused', next: 'human-decision', who: 'the user' },

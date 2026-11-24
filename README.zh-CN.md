@@ -20,16 +20,23 @@ i18n-extract、e2e-testing）、技术栈包（**node / nextjs / vue / react**�
 自己答、平均分掩盖致命缺陷（一个核心功能死了、九十九个检查是绿的）、
 状态只活在对话里（进程一杀全丢）、无预算地重试烧钱。
 
-`harness` 是去掉这些失败模式的确定性内核。它**从不调用 LLM**：三个角色
-Agent——**planner**、**developer**、**evaluator**——在任意宿主（Claude Code、
-Codex…）里负责规划、写码和评判，CLI 负责状态、覆盖门禁、测评、交付闸门、
+`harness` 是去掉这些失败模式的确定性内核。它**从不调用 LLM**：四个角色
+Agent——**planner**、**developer**、**evaluator**、**reviewer**——在任意宿主（Claude Code、
+Codex…）里负责规划、写码、评判和交互复核，CLI 负责状态、覆盖门禁、测评、交付闸门、
 预算，以及每个角色能看到什么。
 
 ## 核心机制
 
 - **按需求生成的 rubric + 一票否决**：essential 项得 0 或 pitfall 触发，
   总分再高也 FAIL。条目分 `command/file/grep`（确定性，脚本判）与
-  `judge`（评判者把 `{score, note}` 写进证据文件，无证据记 0）。
+  `judge`（评判者把 `{score, note}` 写进证据文件，无证据记未验证——是
+  第三种状态，不是分数）。essential/pitfall 项无法验证同样 FAIL
+  （fail-closed，否决理由 `unverified`）。
+- **三层验证**：静态探针 / Agent 交互复核 / 人工确认，分数只来自已验证项。
+  条目用 `verify` 声明谁能判它（`static` 缺省 / `interactive` / `human`）；
+  `interactive` 项必须带可执行断言 `assert`，由 reviewer 在真实会话里
+  执行；还没被任何一层验证的项让总裁决停在 `incomplete`——只挂起，
+  不返工、不靠平均分蒙混。
 - **覆盖门禁**：每个需求必须至少映射一条 essential 检查，否则不许开工——
   分母受控，没法靠少写检查刷分。
 - **逐任务小循环**：实现 → 跑任务检查 → 精确提交 → SHA 经
@@ -146,14 +153,14 @@ npm run demo:run   # 用替身 Agent 演示无人值守全程，含一次驱动�
 v0.4 能驱动循环；v0.5 讲清楚每一步谁来做、能看到什么、以及内核所执行的
 契约由谁、怎样写出来。
 
-- **三角色，隔离是机制不是口号。** `init --host claude-code` 安装
-  `.claude/agents/planner.md`、`developer.md`、`evaluator.md`（硬边界、输入/
+- **四角色，隔离是机制不是口号。** `init --host claude-code` 安装
+  `.claude/agents/planner.md`、`developer.md`、`evaluator.md`、`reviewer.md`（硬边界、输入/
   输出契约、交接字段）；codex/generic 在 `.harness/agents/` 得到同样的指令级
   文本。clarify/replan → planner，implement-task/remediate → developer，
-  evaluate/confirm-evaluation → evaluator。内核按白名单为每个角色构建 packet
-  （`harness packet <feature>`）：developer 拿不到 `rubric.json`；evaluator
+  evaluate/confirm-evaluation → evaluator，review → reviewer。内核按白名单为每个角色构建 packet
+  （`harness packet <feature>`）：developer 拿不到 `rubric.json`；evaluator 与 reviewer
   拿不到提交 SHA、开发者报告、失败日志和状态历史——`harness run` 发现
-  evaluator packet 会泄露这些时直接停机。`run` 下每一步带 `HARNESS_ROLE`，
+  evaluator 或 reviewer packet 会泄露这些时直接停机。`run` 下每一步带 `HARNESS_ROLE`，
   内核命令拒绝错误角色（只有 developer 能 `task-done` / `remediate-done`，
   只有 planner 能 `replan-done`，只有编排者能 `eval`）。judge 证据必须晚于
   它所评判的工作和上一次评估，确认轮因此真的是新鲜的。
@@ -247,8 +254,8 @@ vs date）扣 6，代码声明了契约里没有的字段扣 6。不给 spec 输
 内核只认这份记录：
 
 - rubric 条目 `{ "kind": "verify", "check": "e2e" }` 由内核自己跑；
-- judge 证据按 id 引用：`"verify": ["unit", "e2e"]`，每一项都必须**通过、在当前 HEAD、晚于最近一次改动**，否则记 0；
-- `evidence.requireVerify`（init 检测到检查时默认开启）：judge 给了大于 0 的分却没引用任何 verify 运行，算自述，记 0。
+- judge 证据按 id 引用：`"verify": ["unit", "e2e"]`，每一项都必须**通过、在当前 HEAD、晚于最近一次改动**，否则记未验证；
+- `evidence.requireVerify`（init 检测到检查时默认开启）：judge 给了大于 0 的分却没引用任何 verify 运行，算自述，记未验证。
 
 **反复纠正变成强制规则。** 一再出现的否决不是运气差，是缺一条规则。`fh learn`
 读所有功能的所有评估报告，把失败归成错误类别，给每类提出能管住它的最强执行者：

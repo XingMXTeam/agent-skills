@@ -2,7 +2,7 @@ import { existsSync, readFileSync, writeFileSync, mkdirSync, appendFileSync, rmS
 import path from 'node:path';
 import { featureDir } from './config.js';
 
-export const PHASES = ['clarify', 'implement', 'evaluate', 'verify', 'done', 'paused'];
+export const PHASES = ['clarify', 'implement', 'evaluate', 'review', 'verify', 'done', 'paused'];
 
 export function statePath(root, feature) {
   return path.join(featureDir(root, feature), 'state.json');
@@ -11,7 +11,7 @@ export function statePath(root, feature) {
 export function createState(feature, title = '') {
   const now = Date.now();
   return {
-    version: 1,
+    version: 2,
     feature,
     title,
     phase: 'clarify',
@@ -23,8 +23,23 @@ export function createState(feature, title = '') {
     tasks: [], // { id, title, requirements: [], status: pending|done|failed, attempts, commitSha }
     history: [], // append-only phase/event records
     lastEvaluation: null, // { at, verdict, score, vetoed: [], reportPath }
+    lastReview: null, // { at, verdict, pending: [itemIds], packageAt } — the review phase's record (v2)
     lastFailure: null,
   };
+}
+
+/**
+ * v1 -> v2 (the review phase). In-memory on load; the migrated shape is
+ * persisted by whichever command next saves state. Nothing else changes:
+ * a v1 feature mid-flight resumes exactly where it was.
+ */
+export function migrateState(state) {
+  if (!state || typeof state !== 'object') return state;
+  if ((state.version ?? 1) < 2) {
+    state.version = 2;
+    state.lastReview ??= null;
+  }
+  return state;
 }
 
 export function loadState(root, feature) {
@@ -32,7 +47,7 @@ export function loadState(root, feature) {
   if (!existsSync(file)) {
     throw new Error(`No state for feature "${feature}". Run "harness new ${feature}" first.`);
   }
-  return JSON.parse(readFileSync(file, 'utf8'));
+  return migrateState(JSON.parse(readFileSync(file, 'utf8')));
 }
 
 export function saveState(root, state) {

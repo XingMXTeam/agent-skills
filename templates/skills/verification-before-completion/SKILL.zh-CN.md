@@ -21,6 +21,7 @@
 | developer | 任务/修复完成 | 任务检查 + 其测试，新鲜、带计数；`git rev-parse --short HEAD` |
 | evaluator | API 行为已验证 | 本次运行中采集的真实请求与响应 |
 | evaluator | 旅程可用 / 页面正确 | 本会话的真实浏览器运行：Playwright spec 输出和 `harness capture` 截图（manifest 状态 `pass`） |
+| reviewer | 交互断言成立 | 实际执行的运行证据（`review/` 下的截图 / 轨迹），且每个目标产物都列入并在 `artifactSha` 给出当前 SHA-256；没执行成的断言报未验证，绝不报通过 |
 | planner | 契约完整 | `harness clarify-done` / `replan-done` 的输出 |
 
 失败结论需要同等质量的证据，引用在该角色的报告里。检查或评估失败时由内核自己追加 `failure-log.md`；任何角色都不往里写成功，也不编辑它。

@@ -33,7 +33,13 @@ command or a script with a binary outcome and a file:line citation.
 4. **Mark unverifiable checks honestly.** If a check cannot run in this
    environment (no browser, no credentials), mark it "not verified" —
    never passed, never silently dropped. Output: an explicit
-   not-covered list.
+   not-covered list. In the kernel this is a third state, not a score:
+   an item with no valid evidence is `unverified`, the weighted score
+   is computed over verified items only, and the verdict is
+   `incomplete` until the item is decided — by evidence, by an
+   interactive review, or by a human. Never convert "could not check"
+   into 0: 0 is a judgment ("checked, and it failed"), unverified is
+   the absence of one.
 5. **Report only.** Produce the report and stop. Do not edit the code
    you just evaluated, even for a "one-line obvious fix". Output: a
    report with per-check pass/fail/not-verified and evidence.

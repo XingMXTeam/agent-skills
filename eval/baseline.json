@@ -41,6 +41,26 @@
         true
       ]
     },
+    "test-review-tampered-report": {
+      "outcome": "blocked",
+      "stages": [
+        true,
+        true,
+        true
+      ]
+    },
+    "test-review-valid-report": {
+      "outcome": "clean",
+      "stages": null
+    },
+    "test-review-veto-unverified": {
+      "outcome": "blocked",
+      "stages": [
+        true,
+        true,
+        true
+      ]
+    },
     "tuning-clean-promo-feature": {
       "outcome": "clean",
       "stages": null
