@@ -6,7 +6,7 @@
 
 <br />
 
-# ⚡ agent-skills
+# ⚡ momo-agent-skills
 
 ### **One Developer. A 10x Frontend Engineering Team.**
 **27 battle-tested Agent Skills for shipping production Frontend SaaS — specs first, live trend-scouted UI variants, brownfield contract guards, three-layer automated proof, zero fake fixes.**
