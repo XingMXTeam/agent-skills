@@ -1,295 +1,93 @@
-# frontend-harness-cli
+<div align="center">
 
-一个不绑宿主的 **Harness 内核**，专为长程**前端** AI 编程而造。
+<a href="https://skills.maoxunxing.com/">
+  <img src="docs/social-preview.png" alt="agent-skills — 一个人，活成一支 10 倍速前端工程团队" width="100%" />
+</a>
 
-为什么先做前端？因为证据都在前端。传感器的五维（structure / data /
-logic / **ui** / e2e）、前端向的 Skill（component-from-design、
-i18n-extract、e2e-testing）、技术栈包（**node / nextjs / vue / react**），加上作者十年一线
-前端的实测经验，指向的都是同一个方向。内核本身保持与栈无关——规范与
-默认都放在栈包里——但产品不宣称没有实测过的地盘。先做前端；通用性
-靠一个个栈包挣出来，不靠嘴说。
+<br />
 
-别人卖的是流程，这个卖的是**证据**：一个需求只有在「按需求生成的 rubric
-通过、无 essential 项失败、无 pitfall 触发、交付门禁绿、且达到配置的稳定
-通过轮次」之后才算 done——每一步状态转移都落在可审计、可杀进程、可续跑
-的文件里。
+# ⚡ agent-skills
 
-## 它解决什么
+### **一个人，活成一支 10 倍速前端工程团队。**
+**26 份经过真实项目验证的前端 SaaS 交付 Skills —— 先挑刺出方案、独立分支并行交付、真浏览器截图验收、零假修复。**
 
-长程 Agent 的失败模式是固定的：过早宣布完成（一半功能是占位）、自己出题
-自己答、平均分掩盖致命缺陷（一个核心功能死了、九十九个检查是绿的）、
-状态只活在对话里（进程一杀全丢）、无预算地重试烧钱。
+<p>
+  <a href="https://skills.maoxunxing.com/">
+    <img src="https://img.shields.io/badge/⚡_打开交互式光流工作流与实战剧场-skills.maoxunxing.com-6366f1?style=for-the-badge" alt="打开可视化工作流" />
+  </a>
+</p>
 
-`harness` 是去掉这些失败模式的确定性内核。它**从不调用 LLM**：四个角色
-Agent——**planner**、**developer**、**evaluator**、**reviewer**——在任意宿主（Claude Code、
-Codex…）里负责规划、写码、评判和交互复核，CLI 负责状态、覆盖门禁、测评、交付闸门、
-预算，以及每个角色能看到什么。
+<p>
+  <img src="https://img.shields.io/badge/Skills-26_份可执行能力包-8b5cf6?style=flat-square" alt="26 份 Skills" />
+  <img src="https://img.shields.io/badge/Antigravity-原生适配-06b6d4?style=flat-square" alt="Antigravity" />
+  <img src="https://img.shields.io/badge/Claude_Code-原生适配-f59e0b?style=flat-square" alt="Claude Code" />
+  <img src="https://img.shields.io/badge/Codex-原生适配-10b981?style=flat-square" alt="Codex" />
+  <img src="https://img.shields.io/badge/Cursor-原生适配-ec4899?style=flat-square" alt="Cursor" />
+</p>
 
-## 核心机制
+[English](./README.md) | **简体中文** · [🌐 可视化光流工作流](https://skills.maoxunxing.com/) · [🧠 Prompt 工作台](https://prompts.maoxunxing.com/) · [🔥 实战知识库 &amp; 1v1 陪跑](https://maoxunxing.com/zh-cn/consult/)
 
-- **按需求生成的 rubric + 一票否决**：essential 项得 0 或 pitfall 触发，
-  总分再高也 FAIL。条目分 `command/file/grep`（确定性，脚本判）与
-  `judge`（评判者把 `{score, note}` 写进证据文件，无证据记未验证——是
-  第三种状态，不是分数）。essential/pitfall 项无法验证同样 FAIL
-  （fail-closed，否决理由 `unverified`）。
-- **三层验证**：静态探针 / Agent 交互复核 / 人工确认，分数只来自已验证项。
-  条目用 `verify` 声明谁能判它（`static` 缺省 / `interactive` / `human`）；
-  `interactive` 项必须带可执行断言 `assert`，由 reviewer 在真实会话里
-  执行；还没被任何一层验证的项让总裁决停在 `incomplete`——只挂起，
-  不返工、不靠平均分蒙混。
-- **覆盖门禁**：每个需求必须至少映射一条 essential 检查，否则不许开工——
-  分母受控，没法靠少写检查刷分。
-- **逐任务小循环**：实现 → 跑任务检查 → 精确提交 → SHA 经
-  `git rev-parse --verify` 校验后才记 done，假 SHA 直接拒绝。
-- **长程可恢复**：全部状态在 `.harness/tasks/<feature>/state.json`，
-  `harness next` 只凭状态推出下一步；杀掉进程、新开会话，续跑点不变。
-- **预算与自动收官**：宏循环与单任务重试都有上限，耗尽自动 `paused`
-  等人决策；done 需要配置轮次的稳定通过，确认轮必须来自新的评判上下文。
-- **传感器与技能包**：内置五维确定性扫描可独立运行
-  （`harness scan`，零配置、退出码对齐 CI），rubric 条目可用
-  `kind: "scan"` 读取某一维分数与自己的 `minScore` 比较——判定只归
-  内核，传感器只供数。技能包用 `harness skills list|install` 管理，
-  `init` 时一并装好。每个内置 skill（以及 `harness` 协议 skill）
-  都附中文阅读版：与生效英文版同目录的 `SKILL.zh-CN.md`；宿主加载的
-  始终是英文 `SKILL.md`，中文版只供阅读。
+</div>
 
-## 60 秒上手（v0.10）
+---
 
-```bash
-npm i -g github:XingMXTeam/frontend-harness-cli   # 安装 `fh`（长名 `harness` 仍可用）
-cd your-app
-fh init          # 从 package.json 自动识别栈、宿主和交付门禁；自动接好 Claude Code / AGENTS.md
-fh new checkout  # 或 fh new checkout --prd ./prd.md；自动成为当前 feature
-fh               # “现在该干嘛？”——打印当前 feature 的下一步
-fh done          # “这一步做完了”——按阶段自动路由
-fh e             # 评测（rubric + 否决），自动路由循环
-```
+## 🔥 为什么 90% 用 AI 写 SaaS 的项目都会半路烂尾？
 
-五个命令走完一个 feature，`<feature>` 处处可省（`fh use <名>` 切换，`fh s --all` 看全部）。
+| 维度 | ❌ 传统 Vibe Coding（靠聊天赌运气） | ⚡ 装上 26 份 `agent-skills` 之后 |
+| :--- | :--- | :--- |
+| **写码之前** | 拿到模糊需求十秒开写，自由发挥六小时方向全错 | **`challenge-and-plan`**：先读仓挑刺、问清 3 个关键问题，给 3 版带取舍方案拍板 |
+| **开发过程** | 改好 A 搞坏 B、爱顺手重构无关文件、聊到第 5 轮彻底失忆 | **独立 Worktree 隔离 + 状态先行**：原子提交、长流程规则保留率 ~95% |
+| **质量验收** | AI 自己写代码自己夸“已全部通过”，一打开全是报错 | **确定性硬验收**：只认真实构建/测试退出码 + 真浏览器实测截图 + 可双击 HTML 验收报告 |
+| **线上修 Bug** | 报错点加一句 `if (!x) return` 糊弄过去，下周继续炸 | **`bug-root-cause` + `systematic-debugging`**：强制先复现、定位上游根因、沉淀防复发规则 |
 
-`fh done` 按状态记录，不靠猜：clarify → `clarify-done`（覆盖门禁）；implement → `task-done <下一个任务>`（任务检查通过，且 **HEAD 必须是新提交**，自动带 `--sha`）；remediate → `remediate-done`；replan → `replan-done`（rubric 只能收紧）；evaluate → `eval`。已记录过或早于本 feature 的提交会被拒绝，“先精确提交再标完成”从靠自觉变成靠校验。
+---
 
-`fh init` 会把 gateCommands 设成你项目自己的 `typecheck / lint / test / build` 脚本（识别 npm / pnpm / yarn / bun），在 `.claude/settings.json` 注册 SessionStart hook，并在 `CLAUDE.md`（或 `AGENTS.md`）里写一段带标记的协议说明；重复执行只刷新这一段，不动你其他内容，`--no-wire` 可跳过。
+## 🌐 四端自动适配 · 可视化光流交付大图
 
-短别名：`n` next · `s` status · `e` eval · `p` packet · `r` report · `g` gate · `c` capture · `v` visual。v0.9 的长命令全部保留。
+**点击下方大图，直接前往 [skills.maoxunxing.com](https://skills.maoxunxing.com/) 切换 Antigravity / Claude Code / Codex / Cursor 实时演练全流程 →**
 
-## 快速开始
+<a href="https://skills.maoxunxing.com/#workflow">
+  <img src="docs/workflow-preview.png" alt="skills.maoxunxing.com 四端联动光流工作流" width="100%" />
+</a>
 
-```bash
-node bin/harness.js init --stack react --host claude-code  # 栈: node/nextjs/vue/react; 宿主: claude-code/codex/generic
-node bin/harness.js new checkout --title "结算流程"
-# 已有成稿 PRD？直接导入——原文复制，rubric 的需求从它的 REQ-n 编号播种
-# （缺号只报告、永不重编），clarify 缩减为确认 + 补缺口：
-#   node bin/harness.js new checkout --prd ./checkout-prd.md
-# planner：与用户澄清，再按 write-* 链写 prd.md、vision.md、tech-design.md + pages.json、
-# tasks.json、rubric.json + e2e-cases.json
-node bin/harness.js clarify-done checkout
-node bin/harness.js next checkout
-node bin/harness.js packet checkout          # 交给负责该步骤的角色 Agent 的输入
-node bin/harness.js task-done checkout TASK-1 --sha <commit>
-node bin/harness.js capture checkout         # evaluator：按 pages.json 用 Playwright 截图
-node bin/harness.js eval checkout
-node bin/harness.js report checkout
-npm run demo     # 端到端演示，含一次模拟中途中断后的续跑
-npm run example  # examples/notice-list：真实功能走完 失败 → replan → 修复 → 通过 → done
-npm test         # 87 个测试：v0.1 内核全套（覆盖门禁/否决/pitfall/judge 证据/续跑/SHA/预算停机/全流程）
-               # + v0.2 统一（scan 分数等价/scan 条目/技能包装语义）
-               # + v0.3（vision 锚点与豁免/e2e 六类配额/verify-zone/scope/scan 历史/skills 自评计分）
-               # + v0.4 run 驱动（无人值守跑到 done/驱动重启续跑/澄清需人停机/Agent 失败与停滞检测）
-               # + v0.5 Agent 层（角色 packet 与隔离绊线/角色守卫/证据新鲜度与引用/分层计分/
-               #   改进建议 → replan/capture 与 visual/notice-list 示例重放）
-               # + v0.6 数据契约对照（字段 diff 通过/扣分、spec 不可加载或无类型声明时中立）
-               # + v0.7 真跑（自动探测 tsc 编译通过/失败/可关、testCommand 与 --run-tests 执行、仅退出码信号）
-               # + v0.8 视觉保真（comparison.json 消费、diff/尺寸变化扣分、无基线中立、visualCommand 刷新）
-```
+> **人只做关键决策，其余全由 AI 自治跑完：** 你只在 **① 立项拍板方案 → ② 睡醒看 HTML 验收报告点合并 → ③ 报 Bug / 提新需求** 这 3 个节点介入；中间的并行编码、浏览器实测与提 PR，Skill 会根据你的工具环境自动唤起最强原生能力。
 
-## v0.3 补齐：品质锚定、治理接线、分母与自评
+---
 
-- **品质愿景（quality-vision）。** 每个 feature 在澄清阶段写 `vision.md`：
-  REF（正参照）/ ANTI（反参照）/ RL（红线，每条必须注明
-  `check: screenshot|dom|command`）。覆盖门禁强制：vision 结构达标、
-  judge 条目必须引用存在的锚点、每个 requirement 要么有品质条目、
-  要么有带理由的 `qualityWaivers` 豁免——沉默不等于豁免。没锚点的品质
-  判断在 rubric 加载时就被拒绝。
-- **治理接线。** 门禁引擎里的人工保护区与可改范围守卫接成命令：
-  `harness verify-zone`（受保护文件被改且无 `GATE_HUMAN_CONFIRM=yes`
-  时拦截）、`harness scope <plan.md>`（改动超出计划「可改范围」节时
-  拦截）、`harness scan --history <dir>`（只追加的历史报告 + 与上轮
-  趋势对比）。
-- **E2E 分母受控。** rubric 可声明 `e2eCategories` 六类最低配额
-  （core / negative / boundary / crossFeature / persistence /
-  uiJourney），覆盖门禁在 clarify-done 就核对 `e2e-cases.json`：
-  N/A 必须写理由，core 与 negative 各至少一条 blocking；
-  `policy.minPitfallsPerRequirement` 可强制每个 requirement 预先
-  写明致命缺陷。
-- **Skill 自评。** `harness skills eval` 发出黄金用例包（内置 36 条，
-  应触发/不应触发 ≈ 80/20，每个内置 skill 都有用例），由全新宿主会话回填证据，内核按触发
-  准确率计分判定。改 Skill 不过自评，等于给工作流的规则裸奔改版。
-- **视觉回归**：v0.5 起内核自带 `harness capture` 与 `harness visual`
-  （见下）；没有 baseline 仍然没有视觉判定，内核不假装能查自己查不了
-  的东西。
+## ⚡ 一套能力包，自动适配 4 大主流 AI 编程工具
 
-## 真长程：`harness run`（v0.4）
+| 你在用的工具 | 自动读取目录 | Skill 自动唤起的原生能力 | 可选手动外挂开关 |
+| :--- | :--- | :--- | :--- |
+| **Antigravity (反重力)** | `.agents/skills/` | 自动拉起 **Swarm** 多代理并行 + **Browser** 真浏览器截图验收 | `/goal`（过夜）、`/grill-me`、`/boost`、`/schedule` |
+| **Claude Code** | `.claude/skills/` | 自动拆 **Subagent** 并行 + `git worktree` 隔离 + Playwright 验真 | `/plan`（`Shift+Tab`）、`/compact`、`/loop` |
+| **Codex** | `.agents/skills/` | 自动隔离分支/沙箱开发 + 全量类型构建测试门禁 | 后台异步多步执行 |
+| **Cursor** | `.agents/skills/` | Agent Mode 规则约束 + 分支隔离 + 终端/MCP 验收 | 立项阶段可切 Plan / Ask 模式 |
 
-内核不调 LLM——这条没变。v0.4 补的是**驱动层**：一个自身没有任何
-智能的循环，它向内核问下一步，内核步骤（clarify-done、eval）自己
-直接跑，Agent 步骤则以无头方式派给宿主 Agent 的命令行：
+---
 
-```bash
-node bin/harness.js run checkout --agent claude-code   # 或 codex
-node bin/harness.js run checkout --agent-cmd "my-agent --headless {prompt}"
-npm run demo:run   # 用替身 Agent 演示无人值守全程，含一次驱动重启
-```
+## 📦 26 份实战 Skills 一览（每一份都交付确定结果）
 
-停机条件全部显式、绝不静默：**done**（完成）、**paused**（内核预算
-耗尽，等人决定）、**needs-human**（澄清环节——驱动不会替用户编答案）、
-**max-steps / timeout**（重跑即续，驱动自身不存状态，靠内核文件
-续跑）、**agent-failing**（宿主 CLI 连续报错）、**stalled**（Agent
-跑了一步但状态签名毫无变化，计一次停滞，两次结束运行——这是
-「禁止停滞」的机械化执行，不靠口头约束）。
+前往 **[skills.maoxunxing.com](https://skills.maoxunxing.com/#skills)** 可免费直接复制 5 份核心样本试跑：
 
-## Agent 层（v0.5）
+- **核心工作流 Meta Skills（4 份）**：`challenge-and-plan` · `autonomous-delivery-proof` · `codebase-archaeology-audit` · `repo-community-patrol`
+- **需求与契约（6 份）**：`clarify-requirements` · `write-prd` · `write-quality-vision` · `write-tech-design` · `write-dev-plan` · `write-acceptance-criteria`
+- **实现与调试（3 份）**：`implement-task` · `systematic-debugging` · `fix-from-report`
+- **确定性验收与走查（4 份）**：`deterministic-eval` · `e2e-testing` · `api-testing` · `interactive-review`
+- **上线与长期记忆（2 份）**：`ship-checklist` · `sync-overview`
+- **前端工程手艺（7 份）**：`context-map` · `plan-before-code` · `state-schema-first` · `component-from-design` · `i18n-extract` · `bug-root-cause` · `verification-before-completion`
 
-v0.4 能驱动循环；v0.5 讲清楚每一步谁来做、能看到什么、以及内核所执行的
-契约由谁、怎样写出来。
+---
 
-- **四角色，隔离是机制不是口号。** `init --host claude-code` 安装
-  `.claude/agents/planner.md`、`developer.md`、`evaluator.md`、`reviewer.md`（硬边界、输入/
-  输出契约、交接字段）；codex/generic 在 `.harness/agents/` 得到同样的指令级
-  文本。clarify/replan → planner，implement-task/remediate → developer，
-  evaluate/confirm-evaluation → evaluator，review → reviewer。内核按白名单为每个角色构建 packet
-  （`harness packet <feature>`）：developer 拿不到 `rubric.json`；evaluator 与 reviewer
-  拿不到提交 SHA、开发者报告、失败日志和状态历史——`harness run` 发现
-  evaluator 或 reviewer packet 会泄露这些时直接停机。`run` 下每一步带 `HARNESS_ROLE`，
-  内核命令拒绝错误角色（只有 developer 能 `task-done` / `remediate-done`，
-  只有 planner 能 `replan-done`，只有编排者能 `eval`）。judge 证据必须晚于
-  它所评判的工作和上一次评估，确认轮因此真的是新鲜的。
-- **让 `clarify-done` 诚实通过的成文链。** 新增 13 个 skill（各带中文阅读版）：
-  `clarify-requirements` → `write-prd` → `write-quality-vision` →
-  `write-tech-design`（+ `pages.json`）→ `write-dev-plan` →
-  `write-acceptance-criteria`（分层 `rubric.json` + 六类 `e2e-cases.json`），
-  developer 用的 `implement-task`、`fix-from-report`、`systematic-debugging`、
-  `verification-before-completion`，evaluator 用的 `e2e-testing`、`api-testing`，
-  以及长期记忆 `sync-overview`。`.harness/docs/` 安装三份文档：
-  `orchestration.md`、`evaluation-rubric-standard.md`、`evaluation-heuristics.md`。
-- **结论 → 下一步固定映射，禁止停在总结。** `harness routes` 打印映射表；
-  `harness eval` 每次都打印下一步；协议 skill 与 session-start hook 要求编排者
-  同一轮派发，且绝不替用户回答澄清问题。
-- **分层 rubric。** `"layerWeights": true` 按 L1 正确性 / L2 健壮性 / L3 UI /
-  L4 交互 = 0.40 / 0.25 / 0.20 / 0.15 计分，级别权重 1 / 0.7 / 0.3；否决仍高于
-  任何分数。可选每层配额（`policy.minEssentialPerLayer`、`minPitfallsPerLayer`）。
-- **rubric 进化。** evaluator 在 judge 证据里附 `rubricRefinementSuggestions`；
-  内核记录为 `RS-n`，失败的评估先路由到 `replan`，`replan-done` 要求逐条回答、
-  被接受的建议必须真的改了文件、任何放宽已锁定 rubric 的改动需要人
-  （`GATE_HUMAN_CONFIRM=yes`）。
-- **取证截图与像素比对。** `harness capture <feature>` 按 `pages.json` 用
-  Playwright 截图；非 PNG 或小于 `--min-bytes`（2KB）即失败，占位图只在
-  `--allow-fallback` 下出现（状态 `fallback`，永不算证据）。`harness visual`
-  用 pixelmatch 与 `.harness/baselines/` 比对；没有基线报 `no-baseline`
-  （退出码 2），不算通过。锚定在截图类红线上的 judge 条目必须引用真实 PNG。
-  Playwright、pixelmatch、pngjs 是**可选 peer 依赖**——没装时命令会准确告诉你装什么。
+## 🚀 立即开始
 
-## 数据契约对照：数据维有了参照物（v0.6）
+- **🌐 体验可视化光流工作流 & 免费复制 5 份核心 Skill**：[https://skills.maoxunxing.com](https://skills.maoxunxing.com/)
+- **🧠 高频实战双语 Prompt 工作台（35 免费 + 20 原创 PRO）**：[https://prompts.maoxunxing.com](https://prompts.maoxunxing.com/)
+- **🔥 打包带走完整 Notion 实战知识库（¥199）或预约 1v1 配进你的项目（¥799）**：[https://maoxunxing.com/zh-cn/consult/](https://maoxunxing.com/zh-cn/consult/)
 
-只读代码的扫描器只能查卫生习惯——硬编码密钥、明文 http、storage key
-没命名空间——查不了真正会在线上炸的东西：代码眼里的数据跟契约对不
-对得上。把 `gate.config.json` 的 `inputs.dataSpec` 指向一份契约文件：
+---
 
-```json
-{ "interfaces": [{ "name": "Campaign",
-  "fields": { "id": "string", "startsAt": "date", "tags": "array" } }] }
-```
-
-`harness scan` 就会把代码里同名的 TypeScript `interface`/`type` 声明
-跟它逐字段对照：契约有、代码没建模的字段扣 8，类型对不上（如 string
-vs date）扣 6，代码声明了契约里没有的字段扣 6。不给 spec 输入则行为
-与从前完全一致，零配置扫描不受影响。spec 加载失败、或代码里根本没
-有类型声明时，报中立（neutral）：未验证绝不冒充已验证。
-
-## 真跑：编译和测试都实际执行（v0.7）
-
-此前有两维是在批改「纸面材料」：结构维只量体型和 import，因为没人真
-去编译；e2e 只认别人交来的结果文件。现在两维都在本地真跑：
-
-- **编译。** 显式 `compileCommand` 优先；否则只要项目有 `tsconfig.json`
-  且本地装了 TypeScript（`node_modules/.bin/tsc`），scan 就自己跑
-  `tsc --noEmit`——失败扣 40 并引用第一行错误。只执行本地二进制，绝不
-  下载任何东西。120 秒内跑不完报中立（neutral）而不是失败；
-  `"autoCompile": false` 可完全关闭自动探测。
-- **测试。** 在配置里设 `inputs.testCommand`（如 `"npm test"`），或给
-  `harness scan` 加 `--run-tests`（自动探测 `package.json` 的 test
-  脚本），scan 会在评分前先把测试套件真跑一遍。命令产出了配置的
-  `testResults` 文件就照旧解析计数；没产出则降级为「仅退出码信号」
-  并在报告里明说。命令根本跑不完（超时/启动失败）时，运行信号报
-  未验证，不编造结果。
-
-注意：真跑意味着会执行被扫项目自己的二进制与脚本——只扫你本来就敢
-自己运行的项目。
-
-## 视觉保真：UI 维真的比像素（v0.8）
-
-静态 UI 检查（alt、内联样式、裸 hex）只能证明页面「守规矩」，证明不
-了它「还长得像审批过的设计稿」。把 `inputs.visualResults` 指向一份
-`harness visual` 写出的同款对照报告：
-
-```json
-{ "results": [{ "name": "home", "status": "diff",
-  "ratio": 0.1832, "maxDiffRatio": 0.01 }] }
-```
-
-每个页面按真实像素差评分：状态为 `diff` 或 `size-mismatch` 扣 8；
-`no-baseline` 报中立——未验证，绝不冒充通过，与 `harness visual`
-自身的判定语义一致。再设 `inputs.visualCommand` 为负责截图加比对的
-脚本，scan 会在评分前自己把报告刷新一遍。至此五维全部有了真跑或参
-照物路径：结构真编译、数据对契约、逻辑对计划覆盖、UI 比像素、e2e
-真跑测试。
-
-## 证据造不了假，规则会自己长（v0.11）
-
-**验证是项目资产。** `fh init` 按 package.json 脚本生成 `.harness/verify.json`，
-列出证明这个项目能用的检查（类型、lint、单测、e2e、构建）。`fh verify` 逐个执行，
-把每次运行写进 `.harness/verify/last.json`：命令、退出码、HEAD sha、时间、输出尾部和完整日志。
-项目真有什么检查，就往文件里加什么。
-
-内核只认这份记录：
-
-- rubric 条目 `{ "kind": "verify", "check": "e2e" }` 由内核自己跑；
-- judge 证据按 id 引用：`"verify": ["unit", "e2e"]`，每一项都必须**通过、在当前 HEAD、晚于最近一次改动**，否则记未验证；
-- `evidence.requireVerify`（init 检测到检查时默认开启）：judge 给了大于 0 的分却没引用任何 verify 运行，算自述，记未验证。
-
-**反复纠正变成强制规则。** 一再出现的否决不是运气差，是缺一条规则。`fh learn`
-读所有功能的所有评估报告，把失败归成错误类别，给每类提出能管住它的最强执行者：
-
-| 执行者 | 什么时候 | adopt 做什么 |
-|---|---|---|
-| `gate` | 某个命令 / verify 检查反复失败 | 加进 `gateCommands` |
-| `project-pitfall` | 同一个 grep / scan 在多个功能或多轮里失败 | 写进 `.harness/project-rules.json`，**所有**功能评估时都会否决 |
-| `deterministic` | 同一个 judge 条目反复失败 | （手动）改写成脚本检查 |
-| `per-task` | 已在闸门里，但总在最后才失败 | （手动）每次 `fh done` 前先跑 |
-| `standards` | 其他 | （手动）写进 `.harness/standards.md` |
-
-```bash
-fh learn                      # 规则 → 执行者对照表（.harness/learnings.json）
-fh learn adopt L-3f2a1c       # 只有编排者能执行；下一次评估起生效
-fh learn dismiss L-9b0e44 --reason "下个迭代改设计"
-```
-
-项目规则只能否决（`level: pitfall`），也不写进单个功能的 rubric，所以功能自己放松不了它。
-
-## 诚实边界（v0.5）
-
-内核只做编排与测评，永不调用 LLM；`harness run` 驱动层把任务包派给
-宿主 Agent 的命令行（Claude Code、Codex，或 --agent-cmd 指定的任意
-命令）——智能是宿主的，纪律是内核的。不用 run 时，宿主会话也可以
-照 `harness next` 交互式地走同一套循环。judge 类条目的品味取决于
-真实评判者，内核管的是格式与否决权。完整接线的是 Claude Code
-（协议 skill + 三角色 agent + session-start hook），Codex/generic 为指令级接入。
-隔离约束的是内核发出和接收的东西；有 shell 权限的 Agent 仍然能打开没给它的
-文件——packet、角色守卫和新鲜度规则让这成为一次有意的违规，而不是意外。
-澄清门禁（用户确认、未决问题为 0）是记录在 `clarification/summary.md` 的
-skill 级规则；内核强制的是由它推出的 rubric 覆盖，而不是对话本身。自带示例
-录制时没有浏览器，judge 证据引用的是渲染出的 HTML；`harness capture` 已用
-Playwright 替身和真实 Playwright 安装（缺浏览器 → 清晰报错）测过，尚未在 CI
-里对接真实浏览器。
-
-MIT License.
+<div align="center">
+  <strong>作者：<a href="https://maoxunxing.com/zh-cn/">毛毛星 Momo (@maoxunxing)</a></strong> · 前网易 / 阿里 11 年资深前端 · AI 独立开发者
+  <br />
+  如果这套体系帮你省下了熬夜改 Bug 的时间，欢迎顺手点一个 ⭐ Star！
+</div>

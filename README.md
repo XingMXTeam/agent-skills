@@ -1,506 +1,105 @@
-# frontend-harness-cli
+<div align="center">
 
-A host-agnostic **Harness kernel for long-running frontend AI coding**.
+<a href="https://skills.maoxunxing.com/">
+  <img src="docs/social-preview.png" alt="agent-skills — One Dev. 10x Team." width="100%" />
+</a>
 
-Why frontend? Because that is where the evidence is. The sensor's five
-dimensions (structure / data / logic / **ui** / e2e), the frontend
-skills (`component-from-design`, `i18n-extract`, `e2e-testing`), the
-stack packs (**node / nextjs / vue / react**) and a decade of the author's production frontend
-work all point the same way. The kernel itself stays stack-agnostic —
-standards and defaults live in packs — but the product refuses to claim
-territory it has not measured. Frontend first; generality is earned per
-stack pack, not asserted.
+<br />
 
-Other tools sell you a workflow. This one sells you **proof**: a feature is
-only "done" when a per-requirement rubric passes, no essential check failed,
-no pitfall fired, the delivery gate is green, and the loop earned it across
-the configured number of stable passes — with every transition recorded in
-files you can audit, kill, and resume.
+# ⚡ agent-skills
 
-## Why
+### **One Developer. A 10x Frontend Engineering Team.**
+**26 battle-tested Agent Skills for shipping production Frontend SaaS — specs first, isolated worktrees, real browser proof, zero fake fixes.**
 
-Long-running agents fail in predictable ways:
+<p>
+  <a href="https://skills.maoxunxing.com/">
+    <img src="https://img.shields.io/badge/⚡_Interactive_Workflow_&_Live_Theater-skills.maoxunxing.com-6366f1?style=for-the-badge" alt="Interactive Workflow" />
+  </a>
+</p>
 
-- They declare victory early — half the "features" are placeholders.
-- They grade their own homework — the implementer writes the tests.
-- Averages hide fatal flaws — one dead core function, ninety-nine green checks.
-- State lives in chat memory — kill the process and the run is gone.
-- Retries burn money — no budget, no pause, no human checkpoint.
+<p>
+  <img src="https://img.shields.io/badge/Skills-26_Executable_Contracts-8b5cf6?style=flat-square" alt="26 Skills" />
+  <img src="https://img.shields.io/badge/Antigravity-Supported-06b6d4?style=flat-square" alt="Antigravity" />
+  <img src="https://img.shields.io/badge/Claude_Code-Supported-f59e0b?style=flat-square" alt="Claude Code" />
+  <img src="https://img.shields.io/badge/Codex-Supported-10b981?style=flat-square" alt="Codex" />
+  <img src="https://img.shields.io/badge/Cursor-Supported-ec4899?style=flat-square" alt="Cursor" />
+</p>
 
-`harness` is the deterministic kernel that removes those failure modes. It
-never calls an LLM. Four role agents — **planner**, **developer**,
-**evaluator**, **reviewer** — do the planning, coding, judging and
-interactive review inside any host
-(Claude Code, Codex, …); the CLI owns state, coverage, evaluation, gates,
-budgets, and what each role is allowed to see.
+**English** | [简体中文](./README.zh-CN.md) · [🌐 Interactive Visual Workflow](https://skills.maoxunxing.com/) · [🧠 Prompt Studio](https://prompts.maoxunxing.com/) · [🚀 Full Playbook & 1v1 Setup](https://maoxunxing.com/zh-cn/consult/)
 
-## The loop
+</div>
 
-```
-clarify ──(user confirms; rubric coverage gate)──▶ implement            [planner]
-   │  clarify-requirements → write-prd → write-quality-vision
-   │  → write-tech-design → write-dev-plan → write-acceptance-criteria
-   ▼                                                  │  one task at a time:   [developer]
- implement ◀──────────────────────────────────────────┤  test → code → check →
-   │                                                  │  precise commit → task-done
-   ▼                                                  │
- evaluation (evidence → rubric + veto)  [evaluator, fresh context; the kernel scores]
-   │ fail + refinement suggestions ──▶ replan [planner] ──▶ remediate [developer]
-   │ fail ──────────────────────────────────────────────▶ remediate [developer]
-   │ incomplete (items only interaction or a human can decide)
-   │        ──▶ review [reviewer performs the assertions; kernel merges]
-   │ pass ×N stable (fresh evidence each time)
-   ▼
- delivery gate ──▶ done          budget exhausted at any point ──▶ paused (human decides)
-```
+---
 
-## 60-second start (v0.10)
+## 🔥 Why 90% of AI-Built SaaS Projects Stall Halfway
 
-```bash
-npm i -g github:XingMXTeam/frontend-harness-cli   # installs `fh` (and the long name `harness`)
-cd your-app
-fh init          # stack, host and delivery gate detected from package.json; wires Claude Code / AGENTS.md
-fh new checkout  # or: fh new checkout --prd ./checkout-prd.md — becomes the current feature
-fh               # "what now?" — prints the next action for the current feature
-fh done          # "I finished this step" — routed by phase, see below
-fh e             # evaluate (rubric + vetoes); routes the loop
-```
+| | ❌ Traditional Vibe Coding (Chat & Pray) | ⚡ With `agent-skills` Installed |
+| :--- | :--- | :--- |
+| **Before Coding** | Jumps straight into code in 10 seconds, builds the wrong thing for 6 hours | **`challenge-and-plan`**: challenges assumptions, asks 3 sharp questions, gives 3 trade-off options first |
+| **During Execution** | Breaks working features, mixes unrelated refactors, forgets rules by turn 5 | **Isolated worktrees + state-schema-first**: clean atomic commits, ~95% rule retention |
+| **Quality & Proof** | AI grades its own homework and says *"all tests pass!"* while the page is broken | **Deterministic verification**: real build/lint/test exit codes + real browser screenshots + standalone HTML acceptance report |
+| **Bug Fixes** | Slaps `if (!x) return` band-aids on symptoms; same bug returns next week | **`bug-root-cause` + `systematic-debugging`**: reproduces first, fixes upstream root cause, locks in regression guards |
 
-Five commands cover a whole feature. `<feature>` is optional everywhere: `fh new`
-remembers it (`fh use <name>` switches, `fh s --all` lists every feature).
+---
 
-`fh done` reads state and records the right thing — never a guess:
+## 🌐 Live 4-Host Interactive Workflow
 
-| phase now | `fh done` runs | and checks |
-|---|---|---|
-| clarify | `clarify-done` | every requirement has an essential rubric item |
-| implement-task | `task-done <next task>` | task checks pass; **HEAD is a new commit** (auto `--sha`) |
-| remediate | `remediate-done` | HEAD is a new commit |
-| replan | `replan-done` | every suggestion decided; rubric only tightens |
-| evaluate / confirm | `eval` | vetoes, pass score, stable passes, delivery gate |
-| review | `review-merge` | review report validates (freshness, real evidence, SHA binding) |
+**Click the preview below to launch the interactive animated workflow & live 4-host theater at [skills.maoxunxing.com](https://skills.maoxunxing.com/) →**
 
-`fh done` refuses to record a step at a commit that was already recorded or that
-predates the feature — so "commit precisely, then mark done" is enforced instead of
-remembered. Pass `--sha <commit>` to pick one yourself.
+<a href="https://skills.maoxunxing.com/#workflow">
+  <img src="docs/workflow-preview.png" alt="Interactive 4-Host Animated Workflow on skills.maoxunxing.com" width="100%" />
+</a>
 
-What `fh init` writes into a real repo:
+> **Human-in-the-Loop, Zero Micromanagement:** You only step in at 3 high-leverage checkpoints — **① Approve the plan → ② Review the HTML acceptance report & merge PR → ③ Report bugs / new features**. Everything in between runs autonomously, automatically adapting to your host's native superpowers (**Antigravity Swarm & Browser**, **Claude Code Subagents & Worktree**, **Codex Sandbox**, **Cursor Agent Mode**).
 
-- `harness.config.json` — stack (next/vue/react/node from your deps) and `gateCommands`
-  taken from your own `typecheck` / `lint` / `test` / `build` scripts, with your package manager (npm / pnpm / yarn / bun)
-- `.harness/` — standards pack, docs, feature state (commit it; it is the audit trail)
-- Claude Code: `.claude/agents/{planner,developer,evaluator}.md`, the skills pack, the
-  SessionStart hook **registered in `.claude/settings.json`**, and a short protocol block in `CLAUDE.md`
-- Codex / other hosts: `.harness/agents/*`, `.harness/protocol.md` and the same block in `AGENTS.md`
+---
 
-The block sits between `<!-- frontend-harness:start/end -->` markers: re-running `init` refreshes it
-and never touches the rest of your file. `--no-wire` skips CLAUDE.md / AGENTS.md / settings.json.
+## ⚡ How It Adapts to Your AI Coding Tool
 
-Short aliases: `n` next · `s` status · `e` eval · `p` packet · `r` report · `g` gate · `c` capture · `v` visual.
-Every long command (`harness task-done <feature> <task> --sha …`) still works, so agents and scripts written
-for v0.9 keep running.
+| Host Environment | Skills Directory | Auto-Adapted Superpowers | Optional Power Switches |
+| :--- | :--- | :--- | :--- |
+| **Antigravity** | `.agents/skills/` | Auto-triggers **Swarm** parallel execution + **Browser** real visual verification | `/goal` (overnight), `/grill-me`, `/boost`, `/schedule` |
+| **Claude Code** | `.claude/skills/` | Auto-spawns isolated **Subagents** + `git worktree` + Playwright checks | `/plan` (`Shift+Tab`), `/compact`, `/loop` |
+| **Codex** | `.agents/skills/` | Isolated branch/worktree execution + deterministic build & test gates | Background multi-step execution |
+| **Cursor** | `.agents/skills/` | Agent Mode constraint enforcement + branch isolation + terminal/MCP checks | Plan / Ask mode for Step 01 |
 
-### Or start with one prompt
+---
 
-Paste into Claude Code, Codex, or any agent runtime opened in your project:
+## 📦 26 Battle-Tested Skills (Outcome-First)
 
-```text
-Set up frontend-harness-cli in this project and use it for all feature work from now on.
-1. If `fh` is not available, run: npm i -g github:XingMXTeam/frontend-harness-cli
-2. Run `fh init` (it detects the stack and host; do not overwrite existing files).
-3. From now on: run `fh` for the next action and do exactly that; run `fh done` when a step is finished;
-   never edit .harness state by hand; never declare a feature done yourself.
-4. Ask me which feature to start, create it with `fh new <name>` (or `--prd <file>` if I give you a PRD),
-   and drive it to done. Ask me only at the clarify confirmation and when the harness pauses.
-```
+Every Skill is an **executable deliverable contract** — not vague advice. Explore free copy-ready templates and full deliverables at **[skills.maoxunxing.com](https://skills.maoxunxing.com/#skills)**:
 
-## Evidence you can't fake, rules that learn (v0.11)
+- **Meta Workflows (4)**: `challenge-and-plan` · `autonomous-delivery-proof` · `codebase-archaeology-audit` · `repo-community-patrol`
+- **Specs & Contracts (6)**: `clarify-requirements` · `write-prd` · `write-quality-vision` · `write-tech-design` · `write-dev-plan` · `write-acceptance-criteria`
+- **Implementation & Debugging (3)**: `implement-task` · `systematic-debugging` · `fix-from-report`
+- **Deterministic Eval & Review (4)**: `deterministic-eval` · `e2e-testing` · `api-testing` · `interactive-review`
+- **Ship Gates & Memory (2)**: `ship-checklist` · `sync-overview`
+- **Frontend Craft (7)**: `context-map` · `plan-before-code` · `state-schema-first` · `component-from-design` · `i18n-extract` · `bug-root-cause` · `verification-before-completion`
 
-**Verification is a project asset.** `fh init` writes `.harness/verify.json`
-from the repo's scripts — the checks that prove this project works
-(typecheck, lint, unit, e2e, build). `fh verify` runs them and records each
-run in `.harness/verify/last.json`: command, exit code, HEAD sha, time, output
-tail, full log. Edit the file to add what your project really has.
+---
+
+## 🚀 Get Started in 60 Seconds
+
+1. **Explore the visual workflow & copy free sample Skills**: 👉 **[https://skills.maoxunxing.com](https://skills.maoxunxing.com/)**
+2. **Try the Bilingual AI Prompt Studio (35 free + 20 original PRO SOPs)**: 👉 **[https://prompts.maoxunxing.com](https://prompts.maoxunxing.com/)**
+3. **Want the complete curated Notion workspace + 1v1 repo setup?** 👉 **[https://maoxunxing.com/zh-cn/consult/](https://maoxunxing.com/zh-cn/consult/)**
+
+<details>
+<summary><strong>🛠️ Advanced: CLI Kernel & Local Repo Installation</strong></summary>
 
 ```bash
-fh verify                 # all checks; exit 1 if any fails
-fh verify --only unit,e2e
+git clone https://github.com/XingMXTeam/agent-skills.git
+cd agent-skills && npm install
 ```
 
-That record is the only verify evidence the kernel accepts:
+See the full architecture notes at [maoxunxing.com/en/frontend-ai-collaboration-design/](https://maoxunxing.com/en/frontend-ai-collaboration-design/).
 
-- a rubric item `{ "kind": "verify", "check": "e2e" }` runs the check itself;
-- judge evidence cites runs by id — `"verify": ["unit", "e2e"]` — and is
-  unverified unless each one **passed, at the current HEAD, after the latest work**;
-- `evidence.requireVerify` (on by default when `init` finds checks): a judge
-  score above 0 that cites no verify run is a self-report and is unverified.
+</details>
 
-**Repeated corrections become enforced rules.** A veto that keeps coming back
-is a missing rule. `fh learn` reads every evaluation of every feature, groups
-the failures into mistake classes, and proposes the strongest enforcer that
-can hold each one:
+---
 
-| enforcer | when | adopt does |
-|---|---|---|
-| `gate` | a command / verify check keeps failing | adds it to `gateCommands` |
-| `project-pitfall` | the same grep / scan fails across features or cycles | adds a veto item to `.harness/project-rules.json`, merged into **every** feature's evaluation |
-| `deterministic` | the same judge item keeps failing | (manual) rewrite it as a script check |
-| `per-task` | already in the gate, still failing late | (manual) run it before each `fh done` |
-| `standards` | anything else | (manual) write it into `.harness/standards.md` |
-
-```bash
-fh learn                      # the rule → enforcer table (.harness/learnings.json)
-fh learn adopt L-3f2a1c       # orchestrator only; enforced from the next eval
-fh learn dismiss L-9b0e44 --reason "design changes next sprint"
-```
-
-Project rules are veto-only (`level: pitfall`) and never written into a
-feature's rubric, so a feature cannot loosen them.
-
-## Full command reference
-
-```bash
-harness init [--stack node|nextjs|vue|react] [--host claude-code|codex|generic] [--force] [--no-wire]
-harness new checkout --title "Checkout flow" [--prd ./checkout-prd.md]
-harness clarify-done checkout                # coverage gate: every requirement needs an essential check
-harness next checkout                        # the only question the orchestrator ever needs to ask
-harness packet checkout                      # the role-scoped input for the agent that does it
-harness task-done checkout TASK-1 --sha <commit>
-harness capture checkout                     # evaluator: Playwright screenshots of pages.json
-harness eval checkout                        # rubric evaluation; routes the loop itself
-harness verify [--only unit,e2e]             # project checks, recorded as the evidence judges cite
-harness learn [adopt|dismiss <L-id>]         # repeated failures → gate / project-wide veto
-harness report checkout
-```
-
-Run the self-contained demos:
-
-```bash
-npm run demo       # one feature to done, with a simulated mid-run interruption
-npm run example    # examples/notice-list: a real feature through fail → replan → fix → pass → done
-```
-
-## Evaluation with vetoes
-
-A rubric is generated **per feature**, from its requirements:
-
-```json
-{ "id": "RB-1", "requirement": "REQ-1", "level": "essential",
-  "kind": "command", "command": "npm test", "weight": 3 }
-```
-
-- `level`: `essential | important | optional | pitfall`
-- `kind`: `command | file | grep | judge | scan` — the first three and `scan`
-  are deterministic and decided by scripts, never by a model. `judge` is for
-  what scripts cannot decide: an evaluator writes
-  `{ "score": 0|0.5|1, "note": "…" }` to an evidence file; no evidence means
-  the item is unverified — a third state, not a score. `scan` reads a dimension score from the vendored gate engine.
-- `verify`: `static | interactive | human` — who can actually decide the
-  item. **Three-layer verification: static probes / agent interactive
-  review / human confirmation — scores come only from verified items.**
-  An `interactive` item must carry an executable `assert` (steps +
-  expect) and is decided by the reviewer performing it in a running
-  session; a `human` item only by a human's own attested entry. Items
-  nobody has verified yet make the verdict `incomplete` — held, never
-  remediated, never averaged away.
-
-  The bundled five-dimension scanner also runs standalone —
-  `harness scan [--json] [path]`, no init, zero config, CI exit codes —
-  and `harness skills list|install` manages the bundled skills pack. Each bundled skill (and the `harness`
-  protocol skill) ships with a Chinese reading edition — `SKILL.zh-CN.md`
-  beside the operative English `SKILL.md`, which stays the file hosts load.
-  A sensor-fed rubric item looks like:
-
-  ```json
-  { "id": "RB-7", "requirement": "REQ-1", "level": "essential",
-    "kind": "scan", "dimension": "structure", "minScore": 85, "weight": 2 }
-  ```
-- **Veto rule**: any essential item at 0, or any pitfall triggered, fails the
-  verdict *no matter how high the weighted score is*. Averages never bury a
-  fatal flaw. An essential or pitfall item that could not be verified at
-  all fails it too — fail-closed, veto reason `unverified`.
-- **Coverage gate**: implementation cannot start until every requirement maps
-  to at least one essential item. You cannot game the denominator by not
-  writing checks for the hard parts.
-
-## Long-running by design
-
-- All state in `.harness/tasks/<feature>/state.json`; `harness next` derives
-  the next action from state alone — kill the agent, start a new session,
-  resume exactly where it stopped.
-- Per-task commits with SHAs verified by `git rev-parse --verify`.
-  Placeholder SHAs are rejected.
-- Budgets: macro cycles and per-task retries are capped in
-  `harness.config.json`; exhaustion **pauses** the feature for a human
-  instead of burning more tokens.
-- Auto-stop: finishing requires the configured number of *stable* passes —
-  the confirming evaluation must come from a fresh evaluator context.
-- Advisory locking prevents two invocations from interleaving state writes.
-
-## Stack packs & hosts
-
-`init` installs a standards pack (`node`, `nextjs`, `vue`, `react`) — the
-kernel is stack-agnostic; the pack carries the conventions (layering,
-size, data/network, state, tokens, UI behavior, tests, visual
-regression). Host support today: `claude-code` (installs the `harness`
-protocol skill, the four role agents, the skills pack, and a
-session-start hook that injects the orchestrator rules and the active
-feature), `codex` / `generic` (instruction-level role files + protocol in
-`.harness/`).
-
-## Quality vision: anchored, not vibes (v0.3)
-
-Coverage proves a feature *works*; it cannot prove it is *good*. Every
-feature therefore carries a `vision.md`, written during clarify:
-
-```
-REF-1:  the settings page of <product> — dense, calm, one primary action.
-ANTI-1: a card wall of equal-weight boxes; everything shouts, nothing leads.
-RL-1:   the primary action is visible without scrolling. (check: screenshot)
-RL-2:   no raw hex colors outside the token file. (check: command)
-```
-
-Rules the kernel enforces at `clarify-done` and again at `eval`:
-
-- vision.md must exist with ≥1 REF, ≥1 ANTI, ≥2 RL, and every red line
-  must declare how it is checked (`screenshot | dom | command`).
-- Every `judge` rubric item must cite an anchor (`"anchor": "RL-1"`) that
-  exists in vision.md. An unanchored quality judgment is rejected when the
-  rubric loads — it is a vibe, not a check.
-- Every requirement needs a judge item, or an explicit `qualityWaivers`
-  entry with a reason. Silence is not a waiver.
-
-## Governance: the gate may not rewrite its own rules (v0.3)
-
-The vendored gate engine always contained a protected zone and a plan
-scope guard; v0.3 wires them as commands:
-
-```bash
-node bin/harness.js verify-zone [path]   # protected files (gate.config.json by
-                                         # default) changed? blocked unless a
-                                         # human re-runs with GATE_HUMAN_CONFIRM=yes
-node bin/harness.js scope plan.md [path] # changes outside the plan's declared
-                                         # "Editable scope" section are blocked
-node bin/harness.js scan --history <dir> # append-only scan reports + trend vs
-                                         # the previous run
-```
-
-## E2E denominators and skill self-evaluation (v0.3)
-
-- A pass rate is only as honest as its denominator. Declare
-  `e2eCategories` minimums in the rubric (core / negative / boundary /
-  crossFeature / persistence / uiJourney) and the coverage gate checks
-  `e2e-cases.json` against them — N/A needs a written reason, core and
-  negative need a blocking case. `policy.minPitfallsPerRequirement`
-  likewise forces fatal flaws to be named in advance.
-- The workflow's own skills are no longer exempt from evaluation:
-  `harness skills eval` emits a golden-set packet (36 bundled cases,
-  ~80/20 should/should-not trigger, every bundled skill covered), a fresh host session returns
-  evidence, and the kernel scores trigger accuracy against a threshold.
-  Editing a skill without re-running its eval is an ungraded change to
-  the rules themselves.
-- Visual regression: since v0.5 the kernel ships `harness capture` and
-  `harness visual` (below). No baseline is still no visual verdict — the
-  kernel does not fake checks.
-
-## True long-running: `harness run` (v0.4)
-
-The kernel never calls an LLM — that has not changed. What v0.4 adds is
-the missing **driver**: a loop with no intelligence of its own that asks
-the kernel what happens next, runs kernel steps (`clarify-done`, `eval`)
-directly, and dispatches agent steps to a host agent CLI, headless:
-
-```bash
-node bin/harness.js run checkout --agent claude-code   # or codex
-node bin/harness.js run checkout --agent-cmd "my-agent --headless {prompt}"
-node bin/harness.js run checkout --max-steps 20 --max-minutes 240
-npm run demo:run   # unattended run with a stand-in agent, incl. a driver restart
-```
-
-Stop conditions are explicit, never silent: **done**, **paused** (kernel
-budget — a human decides), **needs-human** (clarification: the driver
-will not fabricate user answers), **max-steps / timeout** (re-run to
-continue — the driver holds no state, the kernel's files resume the
-work), **agent-failing** (host CLI keeps erroring), and **stalled** —
-an agent step that changes nothing in the state signature counts
-against the run; two in a row end it. That last one is the "no
-stagnation" rule, enforced mechanically instead of by exhortation.
-
-## The agent layer (v0.5)
-
-v0.4 could drive a loop; v0.5 says who does each step, what they may
-see, and how they write the contract the kernel enforces.
-
-**Four roles, isolation as a mechanism.** `init --host claude-code`
-installs `.claude/agents/planner.md`, `developer.md`, `evaluator.md`,
-`reviewer.md`
-(hard boundaries, input/output contracts, handoff fields); codex/generic
-get the same text in `.harness/agents/`. Each action belongs to one role:
-clarify/replan → planner, implement-task/remediate → developer,
-evaluate/confirm-evaluation → evaluator, review → reviewer. The kernel builds each role's
-packet from a whitelist (`harness packet <feature>`): the developer never
-gets `rubric.json`; the evaluator and the reviewer never get commit SHAs, developer
-reports, the failure log or state history — `harness run` refuses to send
-an evaluator or reviewer packet that would. Under `run`, every step carries
-`HARNESS_ROLE`, and kernel commands refuse the wrong role (only the
-developer records `task-done` / `remediate-done`, only the planner
-`replan-done`, nobody but the orchestrator runs `eval`). Judge evidence
-must be newer than the work it judges and the previous evaluation, so
-the confirmation pass really is fresh.
-
-**An authoring chain that makes `clarify-done` pass honestly.** Thirteen
-new skills (English operative + Chinese reading edition each):
-`clarify-requirements` → `write-prd` → `write-quality-vision` →
-`write-tech-design` (+ `pages.json`) → `write-dev-plan` →
-`write-acceptance-criteria` (layered `rubric.json` + six-category
-`e2e-cases.json`), then `implement-task`, `fix-from-report`,
-`systematic-debugging`, `verification-before-completion` for the
-developer, `e2e-testing` and `api-testing` for the evaluator, and
-`sync-overview` for long-term memory. Docs installed to `.harness/docs/`:
-`orchestration.md`, `evaluation-rubric-standard.md`,
-`evaluation-heuristics.md`.
-
-**Fixed verdict routes, no stopping at a summary.** `harness routes`
-prints the verdict → next-step table; `harness eval` prints the next
-action every time; the protocol skill and the session-start hook tell the
-orchestrator to dispatch it in the same turn and never to answer a
-clarification question for the user.
-
-**Layered rubrics.** `"layerWeights": true` scores L1 correctness / L2
-robustness / L3 UI / L4 interaction at 0.40 / 0.25 / 0.20 / 0.15 with
-level weights 1 / 0.7 / 0.3; vetoes still beat any score. Optional
-per-layer quotas (`policy.minEssentialPerLayer`, `minPitfallsPerLayer`).
-
-**Rubric evolution.** Evaluators attach `rubricRefinementSuggestions`
-to judge evidence; the kernel records them (`RS-n`), routes a failed
-evaluation to `replan` first, and `replan-done` requires an answer for
-each one, a real change for anything accepted, and a human
-(`GATE_HUMAN_CONFIRM=yes`) for anything that loosens the locked rubric.
-
-**Evidence capture and pixel diff.** `harness capture <feature>` takes
-Playwright screenshots of the routes in `pages.json`; a non-PNG or a file
-under `--min-bytes` (2 KB) fails, and placeholders exist only with
-`--allow-fallback` (status `fallback`, never evidence). `harness visual`
-diffs against `.harness/baselines/` with pixelmatch; a missing baseline
-is `no-baseline` (exit 2), not a pass. A judge item anchored on a
-screenshot-checked red line must cite a real PNG. Playwright, pixelmatch
-and pngjs are **optional peer dependencies** — not installed, the
-commands say exactly what to install.
-
-## Data-spec conformance: the data dimension gets a reference (v0.6)
-
-A scanner that only reads code can check hygiene — hardcoded secrets,
-plain-http URLs, un-namespaced storage keys — but it cannot check the
-thing that actually breaks at runtime: whether the code's view of the
-data matches the contract. Point `inputs.dataSpec` in `gate.config.json`
-at a contract file:
-
-```json
-{ "interfaces": [{ "name": "Campaign",
-  "fields": { "id": "string", "startsAt": "date", "tags": "array" } }] }
-```
-
-and `harness scan` diffs the matching TypeScript `interface`/`type`
-declarations against it, field by field: a spec field missing from the
-code deducts 8, a type that disagrees (string vs date) deducts 6, a
-field the code declares but the spec does not deducts 6. No spec input,
-no change — zero-config scans behave exactly as before. A spec that
-cannot be loaded, or a codebase with no type declarations at all,
-reports *neutral*: unverified never poses as verified.
-
-## Real runs: compilation and tests actually execute (v0.7)
-
-Two dimensions used to grade paperwork: structure trusted size and
-import heuristics because nothing compiled the code, and e2e trusted a
-results file someone else had produced. Both now run the real thing,
-locally:
-
-- **Compilation.** An explicit `compileCommand` still wins. Otherwise,
-  if the project has a `tsconfig.json` and a locally installed
-  TypeScript (`node_modules/.bin/tsc`), the scan runs `tsc --noEmit`
-  itself — failure deducts 40 and quotes the first error. Only local
-  binaries are ever executed; nothing is downloaded. A compile that
-  cannot finish in 120s reports *neutral*, not failed, and
-  `"autoCompile": false` opts out entirely.
-- **Tests.** Set `inputs.testCommand` (e.g. `"npm test"`), or pass
-  `harness scan --run-tests` to detect `package.json`'s test script,
-  and the scan executes the suite before scoring. If the command
-  produces the configured `testResults` file, counts are parsed from it
-  as before; if not, the run counts as an exit-code-only signal and the
-  report says so. A command that cannot complete leaves the run signal
-  unverified rather than inventing a result.
-
-## Visual fidelity: the UI dimension compares pixels (v0.8)
-
-Static UI checks (alt text, inline styles, raw hex) can prove a page
-*follows the rules*; they cannot prove it still *looks like the design
-that was approved*. Point `inputs.visualResults` at a comparison
-report in the shape `harness visual` writes:
-
-```json
-{ "results": [{ "name": "home", "status": "diff",
-  "ratio": 0.1832, "maxDiffRatio": 0.01 }] }
-```
-
-and each page is scored from its real pixel diff: a page whose status
-is `diff` or `size-mismatch` deducts 8; a page with `no-baseline` is
-reported *neutral* — unverified, never a silent pass, the same
-semantics `harness visual` itself uses. Set `inputs.visualCommand` to
-the script that captures fresh screenshots and runs the comparison,
-and the scan refreshes the report itself before scoring. With this,
-every dimension has a real-run or reference-artifact path: structure
-compiles, data diffs a contract, logic checks plan coverage, UI
-compares pixels, e2e runs the suite.
-
-## Honest boundaries (v0.5)
-
-- The kernel orchestrates and evaluates; it never calls an LLM.
-  `harness run` dispatches packets to a host agent CLI (Claude Code,
-  Codex, or any command via `--agent-cmd`) — the intelligence is the
-  host's, the discipline is the kernel's. Without `run`, a host session
-  drives the same loop interactively via `harness next`.
-- Judge-kind items depend on a real evaluator producing evidence; the kernel
-  enforces the *format and the veto*, not the judge's taste.
-- One host is fully wired (Claude Code). Codex/generic are instruction-level.
-- Real runs execute the scanned project's own code: its `tsc` binary,
-  its `compileCommand`/`testCommand`, its `npm test`. That is the point —
-  and it means scan should only be pointed at projects you would run
-  yourself.
-- Isolation is enforced on what the kernel hands out and what it accepts;
-  an agent with shell access can still open a file it was not given.
-  The packet, the role guard and the freshness rule make that a
-  deliberate violation, not an accident.
-- The clarification gate (user confirmed, zero open questions) is a
-  skill-level rule recorded in `clarification/summary.md`; the kernel
-  enforces the rubric coverage that follows from it, not the
-  conversation itself.
-- The bundled example was recorded without a browser; its judge
-  evidence cites rendered HTML. `harness capture` is tested against a
-  Playwright stand-in and a real Playwright install (browser missing →
-  clear error), not against a live browser in CI yet.
-
-## Development
-
-```bash
-npm test        # 87 tests: the v0.1 kernel set (coverage gate, veto, pitfall,
-                # judge evidence, resume, SHA verification, budget pause, full
-                # loop to done) + v0.2 unification (scan-score equivalence with
-                # the original ai-code-gate CLI, scan rubric items, skills-pack
-                # install semantics) + v0.3 (vision anchors & waivers, e2e
-                # category quotas, verify-zone / scope / scan history,
-                # skills-eval scoring) + v0.4 run driver (unattended run to
-                # done, driver restart resume, needs-human stop, agent
-                # failure and stall detection) + v0.5 agent layer (role
-                # packets and isolation tripwire, role guard, evidence
-                # freshness and artifacts, layered scoring, refinement →
-                # replan, capture/visual, the notice-list example replay)
-                # + v0.6 data-spec conformance (field diff pass/deductions,
-                # neutral on unloadable spec or missing declarations)
-                # + v0.7 real runs (auto-detected tsc compile pass/fail/opt-out,
-                # testCommand and --run-tests execution, exit-code signal)
-                # + v0.8 visual fidelity (comparison.json consumption,
-                # diff/size-mismatch deductions, no-baseline neutral,
-                # visualCommand refresh)
-```
-
-MIT License.
+<div align="center">
+  <strong>Built by <a href="https://maoxunxing.com/">Momo (@maoxunxing)</a></strong> · Former NetEase &amp; Alibaba Senior Frontend Engineer (11 yrs) · Indie Maker
+  <br />
+  If this helps you ship cleaner SaaS faster, drop a ⭐ on this repo!
+</div>
