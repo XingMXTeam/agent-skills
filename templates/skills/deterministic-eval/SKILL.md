@@ -24,9 +24,21 @@ command or a script with a binary outcome and a file:line citation.
    `any`, suppressed type errors), required patterns present (e.g.
    every storage key namespaced, every user-visible string externalized).
    Output: a checklist where each item names the exact command or query.
-2. **Run, don't read.** Execute each check: compiler and linter exit
-   codes, `grep`/AST queries for pattern presence and absence, the test
-   suite's real pass/fail counts. Output: raw results, not impressions.
+2. **Run, don't read (Three-Layer Verification & Host Isolation).** Execute
+   each check using your host's native isolation boundary (Claude Code
+   static `.claude/agents/` roles, Antigravity dynamic `Swarm` + `Browser`
+   subagents, or Cursor / Codex isolated worktrees & scripts):
+   - **Layer 1 (Code, Data & Logic)**: real compiler/linter/test exit codes,
+     runtime schema checks against live API responses, field consumption
+     verification, and property-based tests (e.g. `fast-check`) for stateful
+     transitions, sorting/filtering invariants, or currency/permission math.
+   - **Layer 2 (Real Browser & DOM Audit)**: live interactive walkthrough
+     (`interactive-review`) + browser `getComputedStyle` checks (zero
+     horizontal overflow, no clipped/overlapping text, token compliance) +
+     SHA-256 artifact binding.
+   - **Layer 3 (Human Sign-off)**: leave `verify: "human"` subjective taste
+     and release sign-off to the user via the standalone HTML report.
+   Output: raw results, not impressions.
 3. **Cite evidence per check.** Every passed check records where the
    evidence is (file:line of the match, the command and its exit code).
    Output: no check is marked passed without a citation.

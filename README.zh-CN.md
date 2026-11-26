@@ -9,7 +9,7 @@
 # ⚡ agent-skills
 
 ### **一个人，活成一支 10 倍速前端工程团队。**
-**26 份经过真实项目验证的前端 SaaS 交付 Skills —— 先挑刺出方案、独立分支并行交付、真浏览器截图验收、零假修复。**
+**27 份经过真实项目验证的前端 SaaS 交付 Skills —— 先挑刺出方案、实时采风多方案 UI 试衣间、老仓库变更红线守卫、三层智能自动化验收、零假修复。**
 
 <p>
   <a href="https://skills.maoxunxing.com/">
@@ -18,7 +18,7 @@
 </p>
 
 <p>
-  <img src="https://img.shields.io/badge/Skills-26_份可执行能力包-8b5cf6?style=flat-square" alt="26 份 Skills" />
+  <img src="https://img.shields.io/badge/Skills-27_份可执行能力包-8b5cf6?style=flat-square" alt="27 份 Skills" />
   <img src="https://img.shields.io/badge/Antigravity-原生适配-06b6d4?style=flat-square" alt="Antigravity" />
   <img src="https://img.shields.io/badge/Claude_Code-原生适配-f59e0b?style=flat-square" alt="Claude Code" />
   <img src="https://img.shields.io/badge/Codex-原生适配-10b981?style=flat-square" alt="Codex" />
@@ -65,11 +65,11 @@
 
 ---
 
-## 📦 26 份实战 Skills 一览（每一份都交付确定结果）
+## 📦 27 份实战 Skills 一览（每一份都交付确定结果）
 
-前往 **[skills.maoxunxing.com](https://skills.maoxunxing.com/#skills)** 可免费直接复制 5 份核心样本试跑：
+包含 **三层智能自动化验收**（代码/接口实跑 + 真浏览器交互走查与 SHA 防篡改 + 老板 30 秒看报告签字）、**老仓库增量红线模板**（`templates/standards/brownfield-contract.md`）与 **实时采风 UI 试衣间（`ui-variants-studio`）**。前往 **[skills.maoxunxing.com](https://skills.maoxunxing.com/#skills)** 可免费直接复制 6 份核心样本试跑：
 
-- **核心工作流 Meta Skills（4 份）**：`challenge-and-plan` · `autonomous-delivery-proof` · `codebase-archaeology-audit` · `repo-community-patrol`
+- **核心工作流 Meta Skills（5 份）**：`challenge-and-plan` · `ui-variants-studio` · `autonomous-delivery-proof` · `codebase-archaeology-audit` · `repo-community-patrol`
 - **需求与契约（6 份）**：`clarify-requirements` · `write-prd` · `write-quality-vision` · `write-tech-design` · `write-dev-plan` · `write-acceptance-criteria`
 - **实现与调试（3 份）**：`implement-task` · `systematic-debugging` · `fix-from-report`
 - **确定性验收与走查（4 份）**：`deterministic-eval` · `e2e-testing` · `api-testing` · `interactive-review`

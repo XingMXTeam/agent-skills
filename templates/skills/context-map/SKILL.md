@@ -29,10 +29,14 @@ oriented.
    typecheck, and test — from package scripts, Makefiles, or CI config,
    and verify each command exists. Output: a command table copied from
    real config, never from memory.
-3. **Point to sources of truth.** For each kind of fact (API contract,
-   design tokens, routing rules, state conventions, error codes), name
-   the file or doc that is authoritative. Output: pointers, one line
-   each — the map links to truth, it does not copy it.
+3. **Point to sources of truth & brownfield boundaries.** For each kind of
+   fact (API/gateway contract, design tokens, approved UI library, existing
+   business components, routing rules, state conventions, error codes),
+   name the authoritative file. In existing (brownfield) repos, also link
+   `.harness/brownfield-contract.md` (`frozen` vs `additive-only` fields,
+   gateway response envelope, UI library whitelist, and the designated
+   modern visual benchmark page so legacy styles are never copied). Output:
+   pointers, one line each — the map links to truth, it does not copy it.
 4. **Mark the high-risk zones.** List files and directories where a
    careless edit has outsized blast radius (shared components, global
    styles, config, generated code, migration scripts) and what care

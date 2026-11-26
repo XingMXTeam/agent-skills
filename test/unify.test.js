@@ -77,11 +77,11 @@ const EXPECTED_SKILLS = [
   'codebase-archaeology-audit', 'component-from-design', 'context-map', 'deterministic-eval', 'e2e-testing',
   'fix-from-report', 'i18n-extract', 'implement-task', 'interactive-review', 'plan-before-code',
   'repo-community-patrol', 'ship-checklist', 'state-schema-first', 'sync-overview', 'systematic-debugging',
-  'verification-before-completion', 'write-acceptance-criteria', 'write-dev-plan', 'write-prd',
+  'ui-variants-studio', 'verification-before-completion', 'write-acceptance-criteria', 'write-dev-plan', 'write-prd',
   'write-quality-vision', 'write-tech-design',
 ];
 
-test('skills list shows the 26 bundled skills', () => {
+test('skills list shows the 27 bundled skills', () => {
   const r = run(HERE, ['skills', 'list', '--json']);
   assert.equal(r.status, 0, r.stderr);
   assert.deepEqual(JSON.parse(r.stdout), EXPECTED_SKILLS);

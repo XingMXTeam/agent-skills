@@ -173,6 +173,11 @@
       "expect": "repo-community-patrol"
     },
     {
+      "id": "M5",
+      "prompt": "We are launching a new 0-to-1 landing page and want a more hype, modern aesthetic — scout trending shadcn/21st.dev UI patterns and give me 4 clickable interactive prototypes to choose from before editing production code.",
+      "expect": "ui-variants-studio"
+    },
+    {
       "id": "N1",
       "prompt": "Fix the typo in this README heading.",
       "expect": null

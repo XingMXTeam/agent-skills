@@ -75,14 +75,14 @@ Some prose about being helpful, with no steps and no definition of done.
   for (const f of r.findings) assert.ok(f.why.length > 0, 'every finding must say why it matters');
 });
 
-test('the repo templates: 30 definitions, no failures, no warnings, notes as surveyed', () => {
+test('the repo templates: 31 definitions, no failures, no warnings, notes as surveyed', () => {
   const results = checkDefinitions(ROOT);
   const s = summarizeDefinitions(results);
-  assert.equal(s.files, 30);
+  assert.equal(s.files, 31);
   assert.equal(s.agents, 4);
-  assert.equal(s.skills, 26);
+  assert.equal(s.skills, 27);
   assert.equal(s.fail, 0, `no template may be unrosterable: ${JSON.stringify(results.filter((r) => r.status === 'fail'))}`);
-  assert.equal(s.notes, 26, 'every skill inherits tools (note); every agent declares them');
+  assert.equal(s.notes, 27, 'every skill inherits tools (note); every agent declares them');
   const warned = results.filter((r) => r.status === 'warn');
   assert.equal(warned.length, 0, 'the boundary gaps surveyed in v2 were reported, then fixed by adding an Anti-patterns section to each of the 7 skills; a new warning is a regression, not a survey entry');
   const section = formatDefinitionsSection(results);

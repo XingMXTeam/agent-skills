@@ -596,5 +596,5 @@ test('skills: every new authoring/role skill names its harness role and ships a 
     assert.match(desc, /^Harness |^Any harness role/, `${s} description scopes it to the harness`);
     assert.ok(readFileSync(path.join(dir, s, 'SKILL.zh-CN.md'), 'utf8').includes('中文阅读版'), s);
   }
-  assert.equal(readdirSync(dir).length, 26);
+  assert.equal(readdirSync(dir).length, 27);
 });

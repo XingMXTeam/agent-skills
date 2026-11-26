@@ -9,7 +9,7 @@
 # ⚡ agent-skills
 
 ### **One Developer. A 10x Frontend Engineering Team.**
-**26 battle-tested Agent Skills for shipping production Frontend SaaS — specs first, isolated worktrees, real browser proof, zero fake fixes.**
+**27 battle-tested Agent Skills for shipping production Frontend SaaS — specs first, live trend-scouted UI variants, brownfield contract guards, three-layer automated proof, zero fake fixes.**
 
 <p>
   <a href="https://skills.maoxunxing.com/">
@@ -18,7 +18,7 @@
 </p>
 
 <p>
-  <img src="https://img.shields.io/badge/Skills-26_Executable_Contracts-8b5cf6?style=flat-square" alt="26 Skills" />
+  <img src="https://img.shields.io/badge/Skills-27_Executable_Contracts-8b5cf6?style=flat-square" alt="27 Skills" />
   <img src="https://img.shields.io/badge/Antigravity-Supported-06b6d4?style=flat-square" alt="Antigravity" />
   <img src="https://img.shields.io/badge/Claude_Code-Supported-f59e0b?style=flat-square" alt="Claude Code" />
   <img src="https://img.shields.io/badge/Codex-Supported-10b981?style=flat-square" alt="Codex" />
@@ -65,11 +65,11 @@
 
 ---
 
-## 📦 26 Battle-Tested Skills (Outcome-First)
+## 📦 27 Battle-Tested Skills (Outcome-First)
 
-Every Skill is an **executable deliverable contract** — not vague advice. Explore free copy-ready templates and full deliverables at **[skills.maoxunxing.com](https://skills.maoxunxing.com/#skills)**:
+Every Skill is an **executable deliverable contract** — not vague advice. Includes **3-Layer Automated Verification** (deterministic commands + real browser interactive SHA-bound walkthrough + 30s human sign-off), **Brownfield Contract Guard** (`templates/standards/brownfield-contract.md`), and **`ui-variants-studio`** (live GitHub / `shadcn` / `21st.dev` scouting → 3–5 clickable HTML prototypes before coding). Explore free copy-ready templates at **[skills.maoxunxing.com](https://skills.maoxunxing.com/#skills)**:
 
-- **Meta Workflows (4)**: `challenge-and-plan` · `autonomous-delivery-proof` · `codebase-archaeology-audit` · `repo-community-patrol`
+- **Meta Workflows (5)**: `challenge-and-plan` · `ui-variants-studio` · `autonomous-delivery-proof` · `codebase-archaeology-audit` · `repo-community-patrol`
 - **Specs & Contracts (6)**: `clarify-requirements` · `write-prd` · `write-quality-vision` · `write-tech-design` · `write-dev-plan` · `write-acceptance-criteria`
 - **Implementation & Debugging (3)**: `implement-task` · `systematic-debugging` · `fix-from-report`
 - **Deterministic Eval & Review (4)**: `deterministic-eval` · `e2e-testing` · `api-testing` · `interactive-review`

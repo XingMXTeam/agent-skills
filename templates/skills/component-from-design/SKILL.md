@@ -29,9 +29,13 @@ the design system the only source of visual values.
    spec into a token name before writing styles. Output: a mapping such
    as "card padding 16px -> var(--spacing-4)". Unmapped values are
    questions for the designer or user, not invitations to hardcode.
-3. **Reuse before creating.** Check the component library for an
-   existing component or variant that covers the need. Output: reuse
-   decision recorded (reused X / built new because Y).
+3. **Reuse before creating (Brownfield vs. Greenfield).** In an existing
+   repo, check the approved UI library whitelist and business-component
+   inventory first — never install a second UI library or copy legacy page
+   styles when a modern benchmark page is designated. For 0-to-1 greenfield
+   screens with no locked spec yet, run `ui-variants-studio` first to align
+   on visual direction before coding. Output: reuse decision recorded
+   (reused X / built new because Y).
 4. **Write styles with tokens only.** Every color, spacing, and type
    value in the new code references a token or an existing component's
    API. Output: code where a search for raw hex/px values in the new

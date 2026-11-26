@@ -33,10 +33,14 @@ instead of bugs found in production.
    owner: server, store, URL, form state, or derived-from-X. Facts
    with two owners get redesigned now, not synchronized later. Output:
    an owner column with exactly one entry per fact.
-4. **Separate server state from client state.** Mark which facts are
-   cached copies of server data and which exist only locally; they
-   have different lifetimes and invalidation rules. Output: the split
-   made explicit in the schema.
+4. **Separate server state from client state & respect protocol mutability.**
+   Mark which facts are cached copies of server data and which exist only
+   locally; they have different lifetimes and invalidation rules. In
+   brownfield repos, classify touched protocol fields as `frozen` (never
+   rename/remove/retype), `additive-only` (optional additions only), or
+   `free` (local UI state), and align with the repo's gateway envelope
+   (wrapper, pagination, error codes, time/money units). Output: the split
+   and mutability tiers made explicit in the schema.
 5. **Namespace persisted keys.** Every storage key follows a pattern
    like `{app}.{feature}.{field}` and includes a version segment if
    the shape may evolve. Output: the key list, collision-checked
