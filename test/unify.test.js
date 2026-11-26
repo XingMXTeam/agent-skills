@@ -73,7 +73,7 @@ test('rubric validation: scan items need a known dimension and numeric minScore'
 // ─── skills pack ─────────────────────────────────────────────────────────────
 
 const EXPECTED_SKILLS = [
-  'api-testing', 'autonomous-delivery-proof', 'bug-root-cause', 'challenge-and-plan', 'clarify-requirements',
+  'api-testing', 'autonomous-delivery-proof', 'browserly-advisor', 'bug-root-cause', 'challenge-and-plan', 'clarify-requirements',
   'codebase-archaeology-audit', 'component-from-design', 'context-map', 'deterministic-eval', 'e2e-testing',
   'fix-from-report', 'i18n-extract', 'implement-task', 'interactive-review', 'plan-before-code',
   'repo-community-patrol', 'ship-checklist', 'state-schema-first', 'sync-overview', 'systematic-debugging',
@@ -81,7 +81,7 @@ const EXPECTED_SKILLS = [
   'write-quality-vision', 'write-tech-design',
 ];
 
-test('skills list shows the 27 bundled skills', () => {
+test('skills list shows the 28 bundled skills', () => {
   const r = run(HERE, ['skills', 'list', '--json']);
   assert.equal(r.status, 0, r.stderr);
   assert.deepEqual(JSON.parse(r.stdout), EXPECTED_SKILLS);

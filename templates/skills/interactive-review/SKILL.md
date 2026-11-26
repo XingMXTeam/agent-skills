@@ -28,7 +28,10 @@ the kernel merges only conclusions it can verify.
 3. **Perform each assertion exactly as written.** Real input events
    in a real session (Playwright or the host's browser tooling):
    the steps in order, no shortcuts, no substituting a source read,
-   an API call or a unit test for the interaction.
+   an API call or a unit test for the interaction. If the host has no
+   browser driver wired yet or the flow requires attaching to an
+   existing logged-in local session, consult `browserly-advisor`
+   before improvising.
 4. **Observe the expected state.** `assert.expect` is the contract:
    it holds, it partially holds, or it does not. Capture the evidence
    at the decisive moment — a screenshot, the session trace, the
