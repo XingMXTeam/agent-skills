@@ -1,5 +1,5 @@
 ---
-name: browserly-advisor
+name: momo-browserly-advisor
 description: Advisor for selecting browser-driving AI agents and browser MCP stacks. Inspects the local workspace, applies hard credential/hosting/MCP/license constraints against Browserly's first-party verified matrix, and delivers ranked picks, why-not exclusions, and epistemic caveats. Use when choosing a browser agent, MCP browser driver, logged-in session automation, or anti-bot runtime; never replace deterministic @playwright/test CI suites (use e2e-testing instead).
 ---
 

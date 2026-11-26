@@ -22,9 +22,9 @@ into scores, findings and better rubric items.
   reading the source for a browser journey.
 - If one approach fails (a flaky selector, a timeout), switch approach
   instead of re-running the same failing command.
-- **Escalation boundary (`browserly-advisor`)**: Keep deterministic
+- **Escalation boundary (`momo-browserly-advisor`)**: Keep deterministic
   `@playwright/test` specs as the default path for your own app. Only
-  consult `browserly-advisor` (or `https://browserly.maoxunxing.com/api/recommend`)
+  consult `momo-browserly-advisor` (or `https://browserly.maoxunxing.com/api/recommend`)
   when selecting an external browser-driving AI agent or MCP driver for
   existing logged-in user sessions, third-party anti-bot walls, or
   exploratory agentic browsing.

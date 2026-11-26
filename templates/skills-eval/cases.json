@@ -180,7 +180,7 @@
     {
       "id": "M6",
       "prompt": "Which browser MCP server or browser-driving AI agent should I choose to automate a logged-in internal ERP locally without uploading credentials to the cloud?",
-      "expect": "browserly-advisor"
+      "expect": "momo-browserly-advisor"
     },
     {
       "id": "N1",

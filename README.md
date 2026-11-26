@@ -85,12 +85,12 @@
 
 ## 📦 28 Battle-Tested Skills (Outcome-First)
 
-Every Skill is an **executable deliverable contract** — not vague advice. Includes **3-Layer Automated Verification** (deterministic commands + real browser interactive SHA-bound walkthrough + 30s human sign-off), **Brownfield Contract Guard** (`templates/standards/brownfield-contract.md`), **`ui-variants-studio`** (live GitHub / `shadcn` / `21st.dev` scouting → 3–5 clickable HTML prototypes before coding), and **`browserly-advisor`** (first-party verified browser agent & MCP selection powered by [browserly.maoxunxing.com](https://browserly.maoxunxing.com/)). Explore free copy-ready templates at **[skills.maoxunxing.com](https://skills.maoxunxing.com/#skills)**:
+Every Skill is an **executable deliverable contract** — not vague advice. Includes **3-Layer Automated Verification** (deterministic commands + real browser interactive SHA-bound walkthrough + 30s human sign-off), **Brownfield Contract Guard** (`templates/standards/brownfield-contract.md`), **`ui-variants-studio`** (live GitHub / `shadcn` / `21st.dev` scouting → 3–5 clickable HTML prototypes before coding), and **`momo-browserly-advisor`** (first-party verified browser agent & MCP selection powered by [browserly.maoxunxing.com](https://browserly.maoxunxing.com/)). Explore free copy-ready templates at **[skills.maoxunxing.com](https://skills.maoxunxing.com/#skills)**:
 
 - **Meta Workflows (5)**: `challenge-and-plan` · `ui-variants-studio` · `autonomous-delivery-proof` · `codebase-archaeology-audit` · `repo-community-patrol`
 - **Specs & Contracts (6)**: `clarify-requirements` · `write-prd` · `write-quality-vision` · `write-tech-design` · `write-dev-plan` · `write-acceptance-criteria`
 - **Implementation & Debugging (3)**: `implement-task` · `systematic-debugging` · `fix-from-report`
-- **Deterministic Eval, Review & Browser Tooling (5)**: `deterministic-eval` · `e2e-testing` · `api-testing` · `interactive-review` · `browserly-advisor`
+- **Deterministic Eval, Review & Browser Tooling (5)**: `deterministic-eval` · `e2e-testing` · `api-testing` · `interactive-review` · `momo-browserly-advisor`
 - **Ship Gates & Memory (2)**: `ship-checklist` · `sync-overview`
 - **Frontend Craft (7)**: `context-map` · `plan-before-code` · `state-schema-first` · `component-from-design` · `i18n-extract` · `bug-root-cause` · `verification-before-completion`
 

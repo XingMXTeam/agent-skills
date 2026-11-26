@@ -176,7 +176,6 @@ Notes (28, informational):
 
 - templates/skills/api-testing/SKILL.md: tools not declared — the skill inherits the host session toolset (this repo's skill convention)
 - templates/skills/autonomous-delivery-proof/SKILL.md: tools not declared — the skill inherits the host session toolset (this repo's skill convention)
-- templates/skills/browserly-advisor/SKILL.md: tools not declared — the skill inherits the host session toolset (this repo's skill convention)
 - templates/skills/bug-root-cause/SKILL.md: tools not declared — the skill inherits the host session toolset (this repo's skill convention)
 - templates/skills/challenge-and-plan/SKILL.md: tools not declared — the skill inherits the host session toolset (this repo's skill convention)
 - templates/skills/clarify-requirements/SKILL.md: tools not declared — the skill inherits the host session toolset (this repo's skill convention)
@@ -189,6 +188,7 @@ Notes (28, informational):
 - templates/skills/i18n-extract/SKILL.md: tools not declared — the skill inherits the host session toolset (this repo's skill convention)
 - templates/skills/implement-task/SKILL.md: tools not declared — the skill inherits the host session toolset (this repo's skill convention)
 - templates/skills/interactive-review/SKILL.md: tools not declared — the skill inherits the host session toolset (this repo's skill convention)
+- templates/skills/momo-browserly-advisor/SKILL.md: tools not declared — the skill inherits the host session toolset (this repo's skill convention)
 - templates/skills/plan-before-code/SKILL.md: tools not declared — the skill inherits the host session toolset (this repo's skill convention)
 - templates/skills/repo-community-patrol/SKILL.md: tools not declared — the skill inherits the host session toolset (this repo's skill convention)
 - templates/skills/ship-checklist/SKILL.md: tools not declared — the skill inherits the host session toolset (this repo's skill convention)

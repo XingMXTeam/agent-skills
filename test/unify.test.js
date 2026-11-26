@@ -73,9 +73,9 @@ test('rubric validation: scan items need a known dimension and numeric minScore'
 // ─── skills pack ─────────────────────────────────────────────────────────────
 
 const EXPECTED_SKILLS = [
-  'api-testing', 'autonomous-delivery-proof', 'browserly-advisor', 'bug-root-cause', 'challenge-and-plan', 'clarify-requirements',
+  'api-testing', 'autonomous-delivery-proof', 'bug-root-cause', 'challenge-and-plan', 'clarify-requirements',
   'codebase-archaeology-audit', 'component-from-design', 'context-map', 'deterministic-eval', 'e2e-testing',
-  'fix-from-report', 'i18n-extract', 'implement-task', 'interactive-review', 'plan-before-code',
+  'fix-from-report', 'i18n-extract', 'implement-task', 'interactive-review', 'momo-browserly-advisor', 'plan-before-code',
   'repo-community-patrol', 'ship-checklist', 'state-schema-first', 'sync-overview', 'systematic-debugging',
   'ui-variants-studio', 'verification-before-completion', 'write-acceptance-criteria', 'write-dev-plan', 'write-prd',
   'write-quality-vision', 'write-tech-design',

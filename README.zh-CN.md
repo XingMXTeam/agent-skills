@@ -85,12 +85,12 @@
 
 ## 📦 28 份实战 Skills 一览（每一份都交付确定结果）
 
-包含 **三层智能自动化验收**（代码/接口实跑 + 真浏览器交互走查与 SHA 防篡改 + 老板 30 秒看报告签字）、**老仓库增量红线模板**（`templates/standards/brownfield-contract.md`）、**实时采风 UI 试衣间（`ui-variants-studio`）**，以及由 [Browserly](https://browserly.maoxunxing.com/) 一手核验数据驱动的 **浏览器智能体选型顾问（`browserly-advisor`）**。前往 **[skills.maoxunxing.com](https://skills.maoxunxing.com/#skills)** 可免费直接复制 6 份核心样本试跑：
+包含 **三层智能自动化验收**（代码/接口实跑 + 真浏览器交互走查与 SHA 防篡改 + 老板 30 秒看报告签字）、**老仓库增量红线模板**（`templates/standards/brownfield-contract.md`）、**实时采风 UI 试衣间（`ui-variants-studio`）**，以及由 [Browserly](https://browserly.maoxunxing.com/) 一手核验数据驱动的 **浏览器智能体选型顾问（`momo-browserly-advisor`）**。前往 **[skills.maoxunxing.com](https://skills.maoxunxing.com/#skills)** 可免费直接复制 6 份核心样本试跑：
 
 - **核心工作流 Meta Skills（5 份）**：`challenge-and-plan` · `ui-variants-studio` · `autonomous-delivery-proof` · `codebase-archaeology-audit` · `repo-community-patrol`
 - **需求与契约（6 份）**：`clarify-requirements` · `write-prd` · `write-quality-vision` · `write-tech-design` · `write-dev-plan` · `write-acceptance-criteria`
 - **实现与调试（3 份）**：`implement-task` · `systematic-debugging` · `fix-from-report`
-- **确定性验收与浏览器选型（5 份）**：`deterministic-eval` · `e2e-testing` · `api-testing` · `interactive-review` · `browserly-advisor`
+- **确定性验收与浏览器选型（5 份）**：`deterministic-eval` · `e2e-testing` · `api-testing` · `interactive-review` · `momo-browserly-advisor`
 - **上线与长期记忆（2 份）**：`ship-checklist` · `sync-overview`
 - **前端工程手艺（7 份）**：`context-map` · `plan-before-code` · `state-schema-first` · `component-from-design` · `i18n-extract` · `bug-root-cause` · `verification-before-completion`
 

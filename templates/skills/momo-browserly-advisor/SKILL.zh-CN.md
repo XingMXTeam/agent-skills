@@ -1,6 +1,6 @@
 <!-- 中文阅读版。生效文件是同目录的 SKILL.md（宿主只加载它）；本文件仅供阅读，内容与英文版一一对应。 -->
 
-# 浏览器智能体选型顾问（browserly-advisor）
+# 浏览器智能体选型顾问（momo-browserly-advisor）
 
 > 数据事实源：[Browserly](https://browserly.maoxunxing.com)（最近一手核验：`2026-11-02`，收录 `17` 个活跃方案，外加 Browserbase 配套设施注记）。
 > 设计原则：**认知诚实（Epistemic Honesty）** — 严禁编造 `unknown` 价格、许可证或反爬 SLA；若常规确定性 Playwright 足够，明确告知用户无需引入重型 LLM Browser Agent。
