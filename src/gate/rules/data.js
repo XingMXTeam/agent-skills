@@ -11,6 +11,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { lineAt, literalAfter } from "../mask.js";
+import { isTestFile } from "../scan.js";
 import { check, violation } from "./shared.js";
 
 function secretChecks(files, rules, ctx) {
@@ -160,17 +161,36 @@ function loadSpec(ctx) {
   try {
     const raw = JSON.parse(readFileSync(join(ctx.root, rel), "utf8"));
     const list = Array.isArray(raw) ? raw : raw.interfaces;
+    const globalConsume = !Array.isArray(raw) && raw.requireConsumption === true;
     if (!Array.isArray(list)) throw new Error("expected { interfaces: [...] }");
     const interfaces = [];
     for (const entry of list) {
       if (!entry || typeof entry.name !== "string") continue;
       const fields = new Map();
+      const frozenSet = new Set(Array.isArray(entry.frozenFields) ? entry.frozenFields : []);
+      const consumedSet = new Set(Array.isArray(entry.consumedFields) ? entry.consumedFields : []);
       if (Array.isArray(entry.fields)) {
         for (const f of entry.fields) if (typeof f === "string") fields.set(f, null);
       } else if (entry.fields && typeof entry.fields === "object") {
-        for (const [k, v] of Object.entries(entry.fields)) fields.set(k, normalizeType(v));
+        for (const [k, v] of Object.entries(entry.fields)) {
+          if (v && typeof v === "object") {
+            fields.set(k, normalizeType(v.type));
+            if (v.mutability === "frozen") frozenSet.add(k);
+            if (v.consumed === true) consumedSet.add(k);
+          } else {
+            fields.set(k, normalizeType(v));
+          }
+        }
       }
-      interfaces.push({ name: entry.name, fields });
+      const mutability = entry.mutability || "strict";
+      if (mutability === "frozen") {
+        for (const k of fields.keys()) frozenSet.add(k);
+      }
+      const requireConsumption = entry.requireConsumption === true || globalConsume;
+      if (requireConsumption) {
+        for (const k of fields.keys()) consumedSet.add(k);
+      }
+      interfaces.push({ name: entry.name, fields, mutability, frozenSet, consumedSet });
     }
     if (interfaces.length === 0) throw new Error("no named interfaces found");
     return { kind: "ok", interfaces, rel };
@@ -243,6 +263,52 @@ function extractDeclarations(files, ctx) {
   return decls;
 }
 
+// Build a runtime-only code corpus from non-test files with interface/type
+// declaration blocks blanked out, so a field declared in `interface X { a }`
+// does not count as consumed unless actual code reads or destructures it.
+function buildConsumptionCorpus(files, ctx) {
+  const chunks = [];
+  const litValues = new Set();
+  const declRe = /\b(?:interface\s+[A-Za-z_$][\w$]*|type\s+[A-Za-z_$][\w$]*\s*=)\s*\{/g;
+  for (const file of files) {
+    if (isTestFile(file.rel)) continue;
+    const view = ctx.views.get(file.rel);
+    if (!view) continue;
+    let code = view.code;
+    const ranges = [];
+    for (const m of code.matchAll(declRe)) {
+      const openIdx = m.index + m[0].length - 1;
+      const end = blockEnd(code, openIdx);
+      if (end >= 0) ranges.push([m.index, end + 1]);
+    }
+    if (ranges.length > 0) {
+      const chars = code.split("");
+      for (const [s, e] of ranges) {
+        for (let i = s; i < e; i++) if (chars[i] !== "\n") chars[i] = " ";
+      }
+      code = chars.join("");
+    }
+    chunks.push(code);
+    for (const lit of view.literals || []) {
+      if (typeof lit.value === "string") litValues.add(lit.value);
+    }
+  }
+  return { code: chunks.join("\n"), litValues };
+}
+
+function isFieldConsumed(field, corpus) {
+  const esc = field.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  // Property access (.field / ?.field) or destructuring ({ field } / { field: x } / , field,)
+  const accessRe = new RegExp(`(?:\\?\\.|\\.)${esc}\\b`);
+  if (accessRe.test(corpus.code)) return true;
+  const destructRe = new RegExp(`\\{[^}]*\\b${esc}\\b\\s*(?:,|\\}|=|:)`);
+  if (destructRe.test(corpus.code)) return true;
+  // Bracket literal lookup obj["field"]
+  const bracketRe = new RegExp(`\\[\\s*\\]`); // masked strings collapse inside brackets; check literal set
+  if (corpus.litValues.has(field) && bracketRe.test(corpus.code)) return true;
+  return false;
+}
+
 function specChecks(files, ctx) {
   const spec = loadSpec(ctx);
   if (spec.kind === "unset") return [];
@@ -257,6 +323,8 @@ function specChecks(files, ctx) {
         `Data spec ${spec.rel} declares ${spec.interfaces.length} interface(s), but no TypeScript interface/type declarations were found in the code — field diff unverified.`
       ),
     ];
+  const needsConsumption = spec.interfaces.some((i) => i.consumedSet.size > 0);
+  const corpus = needsConsumption ? buildConsumptionCorpus(files, ctx) : null;
   const checks = [];
   for (const iface of spec.interfaces) {
     const decl = decls.get(iface.name);
@@ -273,36 +341,90 @@ function specChecks(files, ctx) {
     }
     for (const [field, specType] of iface.fields) {
       const codeField = decl.fields.get(field);
+      const isFrozen = iface.frozenSet.has(field);
+      const isAdditive = iface.mutability === "additive-only";
       if (!codeField) {
-        checks.push(
-          violation(
-            "data-spec-field-missing",
-            `Field "${iface.name}.${field}" is defined in the data spec but missing from the code declaration. The contract promises this field; the frontend never models it.`,
-            `${decl.file}:${decl.line}`,
-            8
-          )
-        );
+        if (isFrozen) {
+          checks.push(
+            violation(
+              "data-spec-frozen-broken",
+              `Frozen contract field "${iface.name}.${field}" was removed or missing in code. Frozen brownfield fields must never be dropped or renamed.`,
+              `${decl.file}:${decl.line}`,
+              15
+            )
+          );
+        } else if (isAdditive) {
+          checks.push(
+            violation(
+              "data-spec-additive-broken",
+              `Additive-only contract field "${iface.name}.${field}" is missing from code. Existing protocol fields must remain intact.`,
+              `${decl.file}:${decl.line}`,
+              12
+            )
+          );
+        } else {
+          checks.push(
+            violation(
+              "data-spec-field-missing",
+              `Field "${iface.name}.${field}" is defined in the data spec but missing from the code declaration. The contract promises this field; the frontend never models it.`,
+              `${decl.file}:${decl.line}`,
+              8
+            )
+          );
+        }
       } else if (specType && codeField.type && specType !== codeField.type) {
+        if (isFrozen) {
+          checks.push(
+            violation(
+              "data-spec-frozen-broken",
+              `Frozen field "${iface.name}.${field}" changed type from "${specType}" to "${codeField.type}". Frozen protocol fields must never change type.`,
+              `${decl.file}:${codeField.line}`,
+              15
+            )
+          );
+        } else if (isAdditive) {
+          checks.push(
+            violation(
+              "data-spec-additive-broken",
+              `Additive-only field "${iface.name}.${field}" drifted from "${specType}" to "${codeField.type}". Existing fields cannot change type.`,
+              `${decl.file}:${codeField.line}`,
+              12
+            )
+          );
+        } else {
+          checks.push(
+            violation(
+              "data-spec-type-mismatch",
+              `Field "${iface.name}.${field}" is typed "${codeField.type}" in code but "${specType}" in the data spec. Type drift across the contract boundary fails silently at runtime.`,
+              `${decl.file}:${codeField.line}`,
+              6
+            )
+          );
+        }
+      }
+      if (codeField && iface.consumedSet.has(field) && corpus && !isFieldConsumed(field, corpus)) {
         checks.push(
           violation(
-            "data-spec-type-mismatch",
-            `Field "${iface.name}.${field}" is typed "${codeField.type}" in code but "${specType}" in the data spec. Type drift across the contract boundary fails silently at runtime.`,
+            "data-spec-field-unconsumed",
+            `Field "${iface.name}.${field}" is declared in TypeScript but never read or destructured in runtime code. Modeling a field without consuming it leaves the UI/logic incomplete.`,
             `${decl.file}:${codeField.line}`,
-            6
+            7
           )
         );
       }
     }
-    for (const [field, codeField] of decl.fields) {
-      if (!iface.fields.has(field)) {
-        checks.push(
-          violation(
-            "data-spec-field-undeclared",
-            `Field "${iface.name}.${field}" is declared in code but does not exist in the data spec. Either the spec is stale or the code invented a field — update one of them.`,
-            `${decl.file}:${codeField.line}`,
-            6
-          )
-        );
+    if (iface.mutability !== "additive-only") {
+      for (const [field, codeField] of decl.fields) {
+        if (!iface.fields.has(field)) {
+          checks.push(
+            violation(
+              "data-spec-field-undeclared",
+              `Field "${iface.name}.${field}" is declared in code but does not exist in the data spec. Either the spec is stale or the code invented a field — update one of them.`,
+              `${decl.file}:${codeField.line}`,
+              6
+            )
+          );
+        }
       }
     }
   }
@@ -315,6 +437,37 @@ function specChecks(files, ctx) {
   return checks;
 }
 
+// Runtime API contract probe: verifies live HTTP responses matched the
+// declared gateway envelope & schema ({ results: [{ endpoint, passed, mismatches? }] }).
+function apiContractChecks(ctx) {
+  const rel = ctx.inputs?.apiContractResults;
+  if (!rel) return [];
+  try {
+    const raw = JSON.parse(readFileSync(join(ctx.root, rel), "utf8"));
+    if (!raw || !Array.isArray(raw.results) || raw.results.length === 0) {
+      return [check("api-contract", null, `API contract results ${rel} contain no probe results — runtime response conformance unverified.`)];
+    }
+    const checks = [];
+    for (const r of raw.results) {
+      if (!r || typeof r.endpoint !== "string") continue;
+      if (r.passed === false) {
+        const detail = Array.isArray(r.mismatches) && r.mismatches.length > 0
+          ? ` Mismatches: ${r.mismatches.join("; ")}.`
+          : "";
+        checks.push(
+          violation("api-contract-mismatch", `Live API probe failed for "${r.endpoint}".${detail}`, rel, 10)
+        );
+      }
+    }
+    if (checks.length === 0) {
+      checks.push(check("api-contract-conformant", true, `All ${raw.results.length} live API contract probe(s) matched schema.`));
+    }
+    return checks;
+  } catch (err) {
+    return [check("api-contract", null, `API contract results could not be loaded (${err.message}) — runtime response conformance unverified.`)];
+  }
+}
+
 export function checkData(files, rules, ctx) {
   const checks = [
     ...secretChecks(files, rules, ctx),
@@ -322,6 +475,7 @@ export function checkData(files, rules, ctx) {
     ...storageChecks(files, ctx),
     ...i18nChecks(files, ctx),
     ...specChecks(files, ctx),
+    ...apiContractChecks(ctx),
   ];
   if (!checks.some((c) => c.passed === false))
     checks.push(check("data-rules", true, "No credential or endpoint violations found."));

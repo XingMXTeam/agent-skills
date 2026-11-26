@@ -44,6 +44,45 @@ export function parseTestResults(data) {
   return null;
 }
 
+// Extract the titles of tests that genuinely PASSED in a runner report
+// (Playwright JSON, Jest/Vitest JSON, or simple { passedTitles: [...] }).
+// Returns null when the artifact does not expose per-test titles.
+export function extractPassedTestTitles(data) {
+  if (!data || typeof data !== "object") return null;
+  if (Array.isArray(data.passedTitles)) {
+    return data.passedTitles.filter((t) => typeof t === "string");
+  }
+  // Jest / Vitest JSON: testResults[].assertionResults[]
+  if (Array.isArray(data.testResults)) {
+    const titles = [];
+    for (const suite of data.testResults) {
+      for (const a of suite?.assertionResults || []) {
+        if (a?.status === "passed") {
+          const title = a.fullName || a.title;
+          if (typeof title === "string") titles.push(title);
+        }
+      }
+    }
+    return titles;
+  }
+  // Playwright JSON: suites[].specs[]
+  if (Array.isArray(data.suites)) {
+    const titles = [];
+    const walk = (suite, prefix) => {
+      const p = suite?.title ? (prefix ? `${prefix} ${suite.title}` : suite.title) : prefix;
+      for (const spec of suite?.specs || []) {
+        if (spec?.ok === true && typeof spec.title === "string") {
+          titles.push(p ? `${p} ${spec.title}` : spec.title);
+        }
+      }
+      for (const child of suite?.suites || []) walk(child, p);
+    };
+    for (const s of data.suites) walk(s, "");
+    return titles;
+  }
+  return null;
+}
+
 // istanbul coverage-summary.json -> per-metric percentages + their mean.
 // -> { lines, statements, functions, branches, mean } or null.
 export function parseCoverage(data) {
