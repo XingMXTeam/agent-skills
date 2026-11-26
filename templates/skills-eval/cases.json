@@ -153,6 +153,26 @@
       "expect": "interactive-review"
     },
     {
+      "id": "M1",
+      "prompt": "Don't edit code yet — challenge my problem framing, ask clarifying questions, and give me 3 options with tradeoffs before we start implementing.",
+      "expect": "challenge-and-plan"
+    },
+    {
+      "id": "M2",
+      "prompt": "Go with Option B: implement everything end-to-end in a git worktree, open a PR, and generate a standalone runnable HTML acceptance proof report in ~/Downloads/.",
+      "expect": "autonomous-delivery-proof"
+    },
+    {
+      "id": "M3",
+      "prompt": "Do a deep codebase health audit and architecture walkthrough of this repository, uncover root-cause technical debt, and distill durable engineering notes.",
+      "expect": "codebase-archaeology-audit"
+    },
+    {
+      "id": "M4",
+      "prompt": "Patrol our GitHub issues, locally test open PRs before merging, and triage user feedback across our Discord channels.",
+      "expect": "repo-community-patrol"
+    },
+    {
       "id": "N1",
       "prompt": "Fix the typo in this README heading.",
       "expect": null

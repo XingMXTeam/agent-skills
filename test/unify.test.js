@@ -73,14 +73,15 @@ test('rubric validation: scan items need a known dimension and numeric minScore'
 // ─── skills pack ─────────────────────────────────────────────────────────────
 
 const EXPECTED_SKILLS = [
-  'api-testing', 'bug-root-cause', 'clarify-requirements', 'component-from-design', 'context-map',
-  'deterministic-eval', 'e2e-testing', 'fix-from-report', 'i18n-extract', 'implement-task',
-  'interactive-review', 'plan-before-code', 'ship-checklist', 'state-schema-first', 'sync-overview', 'systematic-debugging',
+  'api-testing', 'autonomous-delivery-proof', 'bug-root-cause', 'challenge-and-plan', 'clarify-requirements',
+  'codebase-archaeology-audit', 'component-from-design', 'context-map', 'deterministic-eval', 'e2e-testing',
+  'fix-from-report', 'i18n-extract', 'implement-task', 'interactive-review', 'plan-before-code',
+  'repo-community-patrol', 'ship-checklist', 'state-schema-first', 'sync-overview', 'systematic-debugging',
   'verification-before-completion', 'write-acceptance-criteria', 'write-dev-plan', 'write-prd',
   'write-quality-vision', 'write-tech-design',
 ];
 
-test('skills list shows the 22 bundled skills', () => {
+test('skills list shows the 26 bundled skills', () => {
   const r = run(HERE, ['skills', 'list', '--json']);
   assert.equal(r.status, 0, r.stderr);
   assert.deepEqual(JSON.parse(r.stdout), EXPECTED_SKILLS);
@@ -115,12 +116,24 @@ test('skills install: installs all, re-run skips all, --only filters, unknown na
   assert.equal(r.status, 1);
 });
 
-test('init (claude-code) installs the harness skill AND the bundled pack', () => {
+test('init (claude-code) installs the harness skill AND the bundled pack into .claude/skills and .agents/skills', () => {
   const dir = mkdtempSync(path.join(tmpdir(), 'harness-init-'));
   const r = run(dir, ['init', '--stack', 'node', '--host', 'claude-code']);
   assert.equal(r.status, 0, r.stderr);
   assert.ok(existsSync(path.join(dir, '.claude', 'skills', 'harness', 'SKILL.md')));
-  for (const name of EXPECTED_SKILLS) assert.ok(existsSync(path.join(dir, '.claude', 'skills', name, 'SKILL.md')), name);
+  for (const name of EXPECTED_SKILLS) {
+    assert.ok(existsSync(path.join(dir, '.claude', 'skills', name, 'SKILL.md')), `.claude/skills/${name}`);
+    assert.ok(existsSync(path.join(dir, '.agents', 'skills', name, 'SKILL.md')), `.agents/skills/${name}`);
+  }
+});
+
+test('init (generic) installs the bundled pack into .agents/skills for cross-host discovery', () => {
+  const dir = mkdtempSync(path.join(tmpdir(), 'harness-init-generic-'));
+  const r = run(dir, ['init', '--stack', 'node', '--host', 'generic']);
+  assert.equal(r.status, 0, r.stderr);
+  for (const name of EXPECTED_SKILLS) {
+    assert.ok(existsSync(path.join(dir, '.agents', 'skills', name, 'SKILL.md')), `.agents/skills/${name}`);
+  }
 });
 
 test('init is idempotent: a second init skips the pack instead of duplicating', () => {
@@ -129,7 +142,10 @@ test('init is idempotent: a second init skips the pack instead of duplicating', 
   const r = run(dir, ['init', '--stack', 'node', '--host', 'claude-code', '--json']);
   assert.equal(r.status, 0, r.stderr);
   const out = JSON.parse(r.stdout);
-  for (const name of EXPECTED_SKILLS) assert.ok(out.skipped.includes(`.claude/skills/${name}`), name);
+  for (const name of EXPECTED_SKILLS) {
+    assert.ok(out.skipped.includes(`.claude/skills/${name}`), `.claude/skills/${name}`);
+    assert.ok(out.skipped.includes(`.agents/skills/${name}`), `.agents/skills/${name}`);
+  }
 });
 
 test('frontend focus: vue is a first-class stack pack, python is gone', () => {
