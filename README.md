@@ -9,7 +9,7 @@
 # ⚡ momo-agent-skills
 
 ### **One Developer. A 10x Frontend Engineering Team.**
-**27 battle-tested Agent Skills for shipping production Frontend SaaS — specs first, live trend-scouted UI variants, brownfield contract guards, three-layer automated proof, zero fake fixes.**
+**28 battle-tested Agent Skills for shipping production Frontend SaaS — specs first, live trend-scouted UI variants, brownfield contract guards, three-layer automated proof, zero fake fixes.**
 
 <p>
   <a href="https://skills.maoxunxing.com/">
@@ -18,14 +18,14 @@
 </p>
 
 <p>
-  <img src="https://img.shields.io/badge/Skills-27_Executable_Contracts-8b5cf6?style=flat-square" alt="27 Skills" />
+  <img src="https://img.shields.io/badge/Skills-28_Executable_Contracts-8b5cf6?style=flat-square" alt="28 Skills" />
   <img src="https://img.shields.io/badge/Antigravity-Supported-06b6d4?style=flat-square" alt="Antigravity" />
   <img src="https://img.shields.io/badge/Claude_Code-Supported-f59e0b?style=flat-square" alt="Claude Code" />
   <img src="https://img.shields.io/badge/Codex-Supported-10b981?style=flat-square" alt="Codex" />
   <img src="https://img.shields.io/badge/Cursor-Supported-ec4899?style=flat-square" alt="Cursor" />
 </p>
 
-**English** | [简体中文](./README.zh-CN.md) · [🌐 Interactive Visual Workflow](https://skills.maoxunxing.com/) · [🧠 Prompt Studio](https://prompts.maoxunxing.com/) · [🚀 Full Playbook & 1v1 Setup](https://maoxunxing.com/zh-cn/consult/)
+**English** | [简体中文](./README.zh-CN.md) · [🌐 Interactive Visual Workflow](https://skills.maoxunxing.com/) · [🧭 Browserly Agent Matrix](https://browserly.maoxunxing.com/) · [🧠 Prompt Studio](https://prompts.maoxunxing.com/) · [🚀 Full Playbook & 1v1 Setup](https://maoxunxing.com/zh-cn/consult/)
 
 </div>
 
@@ -83,14 +83,14 @@
 
 ---
 
-## 📦 27 Battle-Tested Skills (Outcome-First)
+## 📦 28 Battle-Tested Skills (Outcome-First)
 
-Every Skill is an **executable deliverable contract** — not vague advice. Includes **3-Layer Automated Verification** (deterministic commands + real browser interactive SHA-bound walkthrough + 30s human sign-off), **Brownfield Contract Guard** (`templates/standards/brownfield-contract.md`), and **`ui-variants-studio`** (live GitHub / `shadcn` / `21st.dev` scouting → 3–5 clickable HTML prototypes before coding). Explore free copy-ready templates at **[skills.maoxunxing.com](https://skills.maoxunxing.com/#skills)**:
+Every Skill is an **executable deliverable contract** — not vague advice. Includes **3-Layer Automated Verification** (deterministic commands + real browser interactive SHA-bound walkthrough + 30s human sign-off), **Brownfield Contract Guard** (`templates/standards/brownfield-contract.md`), **`ui-variants-studio`** (live GitHub / `shadcn` / `21st.dev` scouting → 3–5 clickable HTML prototypes before coding), and **`momo-browserly-advisor`** (first-party verified browser agent & MCP selection powered by [browserly.maoxunxing.com](https://browserly.maoxunxing.com/)). Explore free copy-ready templates at **[skills.maoxunxing.com](https://skills.maoxunxing.com/#skills)**:
 
 - **Meta Workflows (5)**: `challenge-and-plan` · `ui-variants-studio` · `autonomous-delivery-proof` · `codebase-archaeology-audit` · `repo-community-patrol`
 - **Specs & Contracts (6)**: `clarify-requirements` · `write-prd` · `write-quality-vision` · `write-tech-design` · `write-dev-plan` · `write-acceptance-criteria`
 - **Implementation & Debugging (3)**: `implement-task` · `systematic-debugging` · `fix-from-report`
-- **Deterministic Eval & Review (4)**: `deterministic-eval` · `e2e-testing` · `api-testing` · `interactive-review`
+- **Deterministic Eval, Review & Browser Tooling (5)**: `deterministic-eval` · `e2e-testing` · `api-testing` · `interactive-review` · `momo-browserly-advisor`
 - **Ship Gates & Memory (2)**: `ship-checklist` · `sync-overview`
 - **Frontend Craft (7)**: `context-map` · `plan-before-code` · `state-schema-first` · `component-from-design` · `i18n-extract` · `bug-root-cause` · `verification-before-completion`
 

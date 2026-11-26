@@ -9,7 +9,7 @@
 # ⚡ agent-skills
 
 ### **一个人，活成一支 10 倍速前端工程团队。**
-**27 份经过真实项目验证的前端 SaaS 交付 Skills —— 先挑刺出方案、实时采风多方案 UI 试衣间、老仓库变更红线守卫、三层智能自动化验收、零假修复。**
+**28 份经过真实项目验证的前端 SaaS 交付 Skills —— 先挑刺出方案、实时采风多方案 UI 试衣间、老仓库变更红线守卫、三层智能自动化验收、零假修复。**
 
 <p>
   <a href="https://skills.maoxunxing.com/">
@@ -18,14 +18,14 @@
 </p>
 
 <p>
-  <img src="https://img.shields.io/badge/Skills-27_份可执行能力包-8b5cf6?style=flat-square" alt="27 份 Skills" />
+  <img src="https://img.shields.io/badge/Skills-28_份可执行能力包-8b5cf6?style=flat-square" alt="28 份 Skills" />
   <img src="https://img.shields.io/badge/Antigravity-原生适配-06b6d4?style=flat-square" alt="Antigravity" />
   <img src="https://img.shields.io/badge/Claude_Code-原生适配-f59e0b?style=flat-square" alt="Claude Code" />
   <img src="https://img.shields.io/badge/Codex-原生适配-10b981?style=flat-square" alt="Codex" />
   <img src="https://img.shields.io/badge/Cursor-原生适配-ec4899?style=flat-square" alt="Cursor" />
 </p>
 
-[English](./README.md) | **简体中文** · [🌐 可视化光流工作流](https://skills.maoxunxing.com/) · [🧠 Prompt 工作台](https://prompts.maoxunxing.com/) · [🔥 实战知识库 &amp; 1v1 陪跑](https://maoxunxing.com/zh-cn/consult/)
+[English](./README.md) | **简体中文** · [🌐 可视化光流工作流](https://skills.maoxunxing.com/) · [🧭 Browserly 浏览器智能体选型](https://browserly.maoxunxing.com/) · [🧠 Prompt 工作台](https://prompts.maoxunxing.com/) · [🔥 实战知识库 &amp; 1v1 陪跑](https://maoxunxing.com/zh-cn/consult/)
 
 </div>
 
@@ -33,7 +33,7 @@
 
 ## 🔥 为什么 90% 用 AI 写 SaaS 的项目都会半路烂尾？
 
-| 维度 | ❌ 传统 Vibe Coding（靠聊天赌运气） | ⚡ 装上 26 份 `agent-skills` 之后 |
+| 维度 | ❌ 传统 Vibe Coding（靠聊天赌运气） | ⚡ 装上 28 份 `agent-skills` 之后 |
 | :--- | :--- | :--- |
 | **写码之前** | 拿到模糊需求十秒开写，自由发挥六小时方向全错 | **`challenge-and-plan`**：先读仓挑刺、问清 3 个关键问题，给 3 版带取舍方案拍板 |
 | **开发过程** | 改好 A 搞坏 B、爱顺手重构无关文件、聊到第 5 轮彻底失忆 | **独立 Worktree 隔离 + 状态先行**：原子提交、长流程规则保留率 ~95% |
@@ -83,14 +83,14 @@
 
 ---
 
-## 📦 27 份实战 Skills 一览（每一份都交付确定结果）
+## 📦 28 份实战 Skills 一览（每一份都交付确定结果）
 
-包含 **三层智能自动化验收**（代码/接口实跑 + 真浏览器交互走查与 SHA 防篡改 + 老板 30 秒看报告签字）、**老仓库增量红线模板**（`templates/standards/brownfield-contract.md`）与 **实时采风 UI 试衣间（`ui-variants-studio`）**。前往 **[skills.maoxunxing.com](https://skills.maoxunxing.com/#skills)** 可免费直接复制 6 份核心样本试跑：
+包含 **三层智能自动化验收**（代码/接口实跑 + 真浏览器交互走查与 SHA 防篡改 + 老板 30 秒看报告签字）、**老仓库增量红线模板**（`templates/standards/brownfield-contract.md`）、**实时采风 UI 试衣间（`ui-variants-studio`）**，以及由 [Browserly](https://browserly.maoxunxing.com/) 一手核验数据驱动的 **浏览器智能体选型顾问（`momo-browserly-advisor`）**。前往 **[skills.maoxunxing.com](https://skills.maoxunxing.com/#skills)** 可免费直接复制 6 份核心样本试跑：
 
 - **核心工作流 Meta Skills（5 份）**：`challenge-and-plan` · `ui-variants-studio` · `autonomous-delivery-proof` · `codebase-archaeology-audit` · `repo-community-patrol`
 - **需求与契约（6 份）**：`clarify-requirements` · `write-prd` · `write-quality-vision` · `write-tech-design` · `write-dev-plan` · `write-acceptance-criteria`
 - **实现与调试（3 份）**：`implement-task` · `systematic-debugging` · `fix-from-report`
-- **确定性验收与走查（4 份）**：`deterministic-eval` · `e2e-testing` · `api-testing` · `interactive-review`
+- **确定性验收与浏览器选型（5 份）**：`deterministic-eval` · `e2e-testing` · `api-testing` · `interactive-review` · `momo-browserly-advisor`
 - **上线与长期记忆（2 份）**：`ship-checklist` · `sync-overview`
 - **前端工程手艺（7 份）**：`context-map` · `plan-before-code` · `state-schema-first` · `component-from-design` · `i18n-extract` · `bug-root-cause` · `verification-before-completion`
 

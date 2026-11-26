@@ -212,12 +212,12 @@ test('scan --history: appends immutable reports and prints a trend on the second
 
 // ─── skills eval ─────────────────────────────────────────────────────────────
 
-test('skills eval: packet emits the bundled golden set (42 cases, ~80/20, every bundled skill covered)', () => {
+test('skills eval: packet emits the bundled golden set (43 cases, ~80/20, every bundled skill covered)', () => {
   const r = run(HERE, ['skills', 'eval', '--json']);
   assert.equal(r.status, 0, r.stderr);
   const out = JSON.parse(r.stdout);
   assert.equal(out.status, 'awaiting-evidence');
-  assert.equal(out.cases.length, 42);
+  assert.equal(out.cases.length, 43);
   assert.equal(out.cases.filter((c) => c.expect === null).length, 7);
   const skills = JSON.parse(run(HERE, ['skills', 'list', '--json']).stdout);
   for (const s of skills) assert.ok(out.cases.some((c) => c.expect === s), `no golden case for ${s}`);

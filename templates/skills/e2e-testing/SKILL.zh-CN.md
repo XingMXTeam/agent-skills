@@ -12,6 +12,7 @@
   - 探索式会话：直接用 Playwright，或宿主若有 Playwright MCP 服务器也可。
 - 没装？`npm i -D @playwright/test playwright && npx playwright install chromium`。若当前环境确实装不了，评估即为 **blocked**——如实报告。绝不用 API 调用、单元测试或读源码代替浏览器旅程。
 - 某种方式失败（选择器不稳、超时）就换方式，而不是反复跑同一条失败命令。
+- **选型升级边界（`momo-browserly-advisor`）**：自家应用的确定性回归与截图验收始终默认使用原生 Playwright；仅当需要复用本机已登录会话、应对第三方反爬或挑选浏览器 MCP / Agent 驱动时，调用 `momo-browserly-advisor`（或查询 `https://browserly.maoxunxing.com/api/recommend`）完成选型。
 
 ## 流程
 

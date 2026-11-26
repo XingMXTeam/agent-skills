@@ -169,14 +169,17 @@ Source: test/fixtures/scan-bad/src/api.ts — the repo's own bad fixture carries
 
 ## Definition completeness (templates — report only)
 
-Scanned 26 definition files (4 agents, 22 skills): 26 pass, 0 warn, 0 fail, 22 notes. This section measures the declarations themselves (frontmatter + SOP body); it is not part of the staged-recall score and never fails the run.
+Scanned 32 definition files (4 agents, 28 skills): 32 pass, 0 warn, 0 fail, 28 notes. This section measures the declarations themselves (frontmatter + SOP body); it is not part of the staged-recall score and never fails the run.
 
 Every definition is complete against the checklist.
-Notes (22, informational):
+Notes (28, informational):
 
 - templates/skills/api-testing/SKILL.md: tools not declared — the skill inherits the host session toolset (this repo's skill convention)
+- templates/skills/autonomous-delivery-proof/SKILL.md: tools not declared — the skill inherits the host session toolset (this repo's skill convention)
 - templates/skills/bug-root-cause/SKILL.md: tools not declared — the skill inherits the host session toolset (this repo's skill convention)
+- templates/skills/challenge-and-plan/SKILL.md: tools not declared — the skill inherits the host session toolset (this repo's skill convention)
 - templates/skills/clarify-requirements/SKILL.md: tools not declared — the skill inherits the host session toolset (this repo's skill convention)
+- templates/skills/codebase-archaeology-audit/SKILL.md: tools not declared — the skill inherits the host session toolset (this repo's skill convention)
 - templates/skills/component-from-design/SKILL.md: tools not declared — the skill inherits the host session toolset (this repo's skill convention)
 - templates/skills/context-map/SKILL.md: tools not declared — the skill inherits the host session toolset (this repo's skill convention)
 - templates/skills/deterministic-eval/SKILL.md: tools not declared — the skill inherits the host session toolset (this repo's skill convention)
@@ -185,11 +188,14 @@ Notes (22, informational):
 - templates/skills/i18n-extract/SKILL.md: tools not declared — the skill inherits the host session toolset (this repo's skill convention)
 - templates/skills/implement-task/SKILL.md: tools not declared — the skill inherits the host session toolset (this repo's skill convention)
 - templates/skills/interactive-review/SKILL.md: tools not declared — the skill inherits the host session toolset (this repo's skill convention)
+- templates/skills/momo-browserly-advisor/SKILL.md: tools not declared — the skill inherits the host session toolset (this repo's skill convention)
 - templates/skills/plan-before-code/SKILL.md: tools not declared — the skill inherits the host session toolset (this repo's skill convention)
+- templates/skills/repo-community-patrol/SKILL.md: tools not declared — the skill inherits the host session toolset (this repo's skill convention)
 - templates/skills/ship-checklist/SKILL.md: tools not declared — the skill inherits the host session toolset (this repo's skill convention)
 - templates/skills/state-schema-first/SKILL.md: tools not declared — the skill inherits the host session toolset (this repo's skill convention)
 - templates/skills/sync-overview/SKILL.md: tools not declared — the skill inherits the host session toolset (this repo's skill convention)
 - templates/skills/systematic-debugging/SKILL.md: tools not declared — the skill inherits the host session toolset (this repo's skill convention)
+- templates/skills/ui-variants-studio/SKILL.md: tools not declared — the skill inherits the host session toolset (this repo's skill convention)
 - templates/skills/verification-before-completion/SKILL.md: tools not declared — the skill inherits the host session toolset (this repo's skill convention)
 - templates/skills/write-acceptance-criteria/SKILL.md: tools not declared — the skill inherits the host session toolset (this repo's skill convention)
 - templates/skills/write-dev-plan/SKILL.md: tools not declared — the skill inherits the host session toolset (this repo's skill convention)
