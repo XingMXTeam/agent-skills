@@ -270,18 +270,24 @@ function cmdInit() {
     const pack = installSkills(path.join(root, '.claude', 'skills'), { force });
     made.push(...pack.installed.map((n) => `.claude/skills/${n}`));
     skipped.push(...pack.skipped.map((n) => `.claude/skills/${n}`));
+    const sharedPack = installSkills(path.join(root, '.agents', 'skills'), { force });
+    made.push(...sharedPack.installed.map((n) => `.agents/skills/${n}`));
+    skipped.push(...sharedPack.skipped.map((n) => `.agents/skills/${n}`));
     write(path.join(harnessDir(root), 'host-setup.md'),
-      '# Claude Code host setup\n\nRegister the session-start hook in `.claude/settings.json`:\n\n```json\n{\n  "hooks": {\n    "SessionStart": [{ "hooks": [{ "type": "command", "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/session-start.sh" }] }]\n  }\n}\n```\n\nThe `harness` skill is already installed at `.claude/skills/harness/SKILL.md`, the four role agents (planner, developer, evaluator, reviewer) at `.claude/agents/`, and the bundled skills pack (the authoring chain clarify-requirements → write-acceptance-criteria, implement-task, e2e-testing, …) alongside them. Manage the pack with `harness skills list|install`.\n\nThe main session is the orchestrator: it runs `harness next`, dispatches the role agent the action names (`harness packet <feature>` prints that agent\'s input), and runs the kernel commands. It does not do role work itself.\n');
+      '# Claude Code host setup\n\nRegister the session-start hook in `.claude/settings.json`:\n\n```json\n{\n  "hooks": {\n    "SessionStart": [{ "hooks": [{ "type": "command", "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/session-start.sh" }] }]\n  }\n}\n```\n\nThe `harness` skill is already installed at `.claude/skills/harness/SKILL.md`, the four role agents (planner, developer, evaluator, reviewer) at `.claude/agents/`, and the bundled skills pack (including the authoring chain and meta-workflow skills) is installed into both `.claude/skills/` and `.agents/skills/` for multi-host discovery. Manage the pack with `harness skills list|install`.\n\nThe main session is the orchestrator: it runs `harness next`, dispatches the role agent the action names (`harness packet <feature>` prints that agent\'s input), and runs the kernel commands. It does not do role work itself.\n');
   } else {
     if (!has('--no-wire')) {
       const md = upsertBlock(path.join(root, 'AGENTS.md'), protocolBlock());
       if (md !== 'unchanged') made.push(`AGENTS.md (harness block ${md})`);
     }
+    const sharedPack = installSkills(path.join(root, '.agents', 'skills'), { force });
+    made.push(...sharedPack.installed.map((n) => `.agents/skills/${n}`));
+    skipped.push(...sharedPack.skipped.map((n) => `.agents/skills/${n}`));
     // Instruction-level role definitions: same text, no host front matter.
     for (const role of ROLES) write(path.join(harnessDir(root), 'agents', `${role}.md`), `${roleInstructions(role)}\n`);
     write(path.join(harnessDir(root), 'protocol.md'), `${stripFrontMatter(readFileSync(path.join(TEMPLATES, 'claude-code', 'SKILL.md'), 'utf8')).trim()}\n`);
     write(path.join(harnessDir(root), 'host-setup.md'),
-      `# Host setup (${host})\n\nAdd this to your agent instructions file (AGENTS.md or equivalent):\n\n> At the start of every session run \`harness next <feature>\` and follow the returned action. The rules are in \`.harness/protocol.md\`. Each action belongs to one role — clarify/replan: planner, implement-task/remediate: developer, evaluate/confirm-evaluation: evaluator, review: reviewer — whose instructions are in \`.harness/agents/<role>.md\`. When your host supports separate sessions or sub-agents, run each role in its own context and give it only \`harness packet <feature>\`. Never stop at a summary: after every verdict, run the next action.\n\nThe authoring and evaluation skills are installable with \`harness skills install --dir <your skills dir>\`; their text is plain Markdown any host can read.\n`);
+      `# Host setup (${host})\n\nAdd this to your agent instructions file (AGENTS.md or equivalent):\n\n> At the start of every session run \`harness next <feature>\` and follow the returned action. The rules are in \`.harness/protocol.md\`. Each action belongs to one role — clarify/replan: planner, implement-task/remediate: developer, evaluate/confirm-evaluation: evaluator, review: reviewer — whose instructions are in \`.harness/agents/<role>.md\`. When your host supports separate sessions or sub-agents, run each role in its own context and give it only \`harness packet <feature>\`. Never stop at a summary: after every verdict, run the next action.\n\nThe bundled skills pack is installed at \`.agents/skills/\` for cross-host discovery (Antigravity, Codex, Cursor, etc.), and can also be installed anywhere with \`harness skills install --dir <your skills dir>\`.\n`);
   }
 
   print({ ok: true, stack, host, gateCommands: config.gateCommands, detected: why, created: made, skipped },
