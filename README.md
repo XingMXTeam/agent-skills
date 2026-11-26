@@ -54,12 +54,30 @@
 
 ---
 
-## ⚡ How It Adapts to Your AI Coding Tool
+## 🛡️ Three-Layer Automated Verification & v0.13 Deep Evaluator
 
-| Host Environment | Skills Directory | Auto-Adapted Superpowers | Optional Power Switches |
+**95% of QA runs autonomously with zero self-grading — you only spend 30 seconds signing off the standalone HTML proof.**
+
+<a href="https://skills.maoxunxing.com/#verification">
+  <img src="docs/verification-preview.png" alt="Three-Layer Intelligent Automated Verification on skills.maoxunxing.com" width="100%" />
+</a>
+
+- **Layer 1 · Deterministic Code, Data & Logic Engine (`src/gate/rules/`)**
+  - **Data completeness & brownfield mutability**: tracks whether declared TS fields are actually **consumed** in runtime code (`data-spec-field-unconsumed`), enforces `frozen` & `additive-only` brownfield protocol redlines, and validates live HTTP responses (`inputs.apiContractResults`).
+  - **Executable Logic Spec + Property-Based Testing**: replaces comment-only checks with real passing test bindings (`inputs.logicSpec` + Jest/Vitest/Playwright `testResults`), state-machine enum & transition coverage, and `fast-check` PBT verification.
+- **Layer 2 · Real Browser Walkthrough + DOM Audit**
+  - Runs interactive journeys in a fresh context (`interactive-review`), audits computed layout (`inputs.domAuditResults`: horizontal overflow, clipped/overlapping elements, font scale drift, opt-in Tailwind arbitrary escapes), and binds every artifact to its **SHA-256** hash so nothing can be tampered with post-review.
+- **Layer 3 · 30-Second Human Sign-Off**
+  - Subjective taste (`verify: "human"`) and production merges always belong to you — delivered via an offline, double-clickable HTML acceptance report.
+
+---
+
+## ⚡ How It Adapts to Your AI Coding Tool (Isolation Boundaries)
+
+| Host Environment | Skills Directory | Isolation Mechanism | Optional Power Switches |
 | :--- | :--- | :--- | :--- |
-| **Antigravity** | `.agents/skills/` | Auto-triggers **Swarm** parallel execution + **Browser** real visual verification | `/goal` (overnight), `/grill-me`, `/boost`, `/schedule` |
-| **Claude Code** | `.claude/skills/` | Auto-spawns isolated **Subagents** + `git worktree` + Playwright checks | `/plan` (`Shift+Tab`), `/compact`, `/loop` |
+| **Antigravity** | `.agents/skills/` | Dynamic **Swarm** multi-agent board + sandboxed **Browser** subagent | `/goal` (overnight), `/grill-me`, `/boost`, `/schedule` |
+| **Claude Code** | `.claude/skills/` | Static 4 role subagents (`.claude/agents/*.md`) + `git worktree` | `/plan` (`Shift+Tab`), `/compact`, `/loop` |
 | **Codex** | `.agents/skills/` | Isolated branch/worktree execution + deterministic build & test gates | Background multi-step execution |
 | **Cursor** | `.agents/skills/` | Agent Mode constraint enforcement + branch isolation + terminal/MCP checks | Plan / Ask mode for Step 01 |
 

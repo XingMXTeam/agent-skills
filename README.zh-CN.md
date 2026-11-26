@@ -54,13 +54,31 @@
 
 ---
 
-## ⚡ 一套能力包，自动适配 4 大主流 AI 编程工具
+## 🛡️ 为什么敢直接去睡觉？三层智能自动化验收 × v0.13 深度评测引擎
 
-| 你在用的工具 | 自动读取目录 | Skill 自动唤起的原生能力 | 可选手动外挂开关 |
+**95% 的验收全部由 AI 自动跑透并绑定防篡改证据，人不当测试员，只做最后 30 秒的老板签字。**
+
+<a href="https://skills.maoxunxing.com/#verification">
+  <img src="docs/verification-preview.png" alt="skills.maoxunxing.com 三层智能自动化验收" width="100%" />
+</a>
+
+- **第 1 层 · 代码、数据协议与逻辑硬核实跑（`src/gate/rules/`）**
+  - **数据真实消费与老仓库红线**：剥离类型声明后检查字段是否在业务代码里真正被消费（`data-spec-field-unconsumed`），强制拦截破坏 `frozen` / `additive-only` 老仓库协议红线的改动，并校验真实接口返回（`inputs.apiContractResults`）。
+  - **可执行逻辑规格 + 属性测试（PBT）**：彻底告别“写句 `// FP-1` 注释就能糊弄过关”，强制绑定真实通过的 Jest / Vitest / Playwright 用例、状态机枚举与转换覆盖，以及 `fast-check` 属性测试门禁。
+- **第 2 层 · 真浏览器交互走查 + 计算样式 DOM 审计**
+  - 独立上下文实操交互（`interactive-review`），结合浏览器 `getComputedStyle` 巡检横向溢出、文本截断、元素重叠与字号阶梯漂移（`inputs.domAuditResults`），并为目标产物绑定 **SHA-256** 防篡改。
+- **第 3 层 · 老板 30 秒签字放行**
+  - 主观审美与生产上线风险永远归你——前两层全绿后打包为可双击离线打开的 HTML 验收报告，你睡醒扫一眼铁证点 Merge 即可。
+
+---
+
+## ⚡ 一套能力包，自动适配 4 大主流 AI 编程工具（隔离边界）
+
+| 你在用的工具 | 自动读取目录 | 开发 / 验收隔离机制 | 可选手动外挂开关 |
 | :--- | :--- | :--- | :--- |
-| **Antigravity (反重力)** | `.agents/skills/` | 自动拉起 **Swarm** 多代理并行 + **Browser** 真浏览器截图验收 | `/goal`（过夜）、`/grill-me`、`/boost`、`/schedule` |
-| **Claude Code** | `.claude/skills/` | 自动拆 **Subagent** 并行 + `git worktree` 隔离 + Playwright 验真 | `/plan`（`Shift+Tab`）、`/compact`、`/loop` |
-| **Codex** | `.agents/skills/` | 自动隔离分支/沙箱开发 + 全量类型构建测试门禁 | 后台异步多步执行 |
+| **Antigravity (反重力)** | `.agents/skills/` | 平台原生动态 **Swarm** 多代理 + 独立 **Browser** 沙箱子代理 | `/goal`（过夜）、`/grill-me`、`/boost`、`/schedule` |
+| **Claude Code** | `.claude/skills/` | 仓库内 4 个静态角色子代理（`.claude/agents/*.md`）+ `git worktree` | `/plan`（`Shift+Tab`）、`/compact`、`/loop` |
+| **Codex** | `.agents/skills/` | 独立分支 / 沙箱隔离 + 全量确定性构建与测试门禁 | 后台异步多步执行 |
 | **Cursor** | `.agents/skills/` | Agent Mode 规则约束 + 分支隔离 + 终端/MCP 验收 | 立项阶段可切 Plan / Ask 模式 |
 
 ---
