@@ -97,6 +97,9 @@ export const DEFAULT_CONFIG = {
       // Raw hex colors outside design-token files break the token system:
       // the value looks right and silently forks the palette.
       maxRawHexPerFile: 3,
+      // Optional cap on Tailwind arbitrary hex/px escapes (e.g. text-[#123], p-[13px]).
+      // Null by default so projects not enforcing strict Tailwind tokens are unaffected.
+      maxTailwindArbitraryPerFile: null,
       tokenFilePatterns: ["**/tokens/**", "**/theme/**", "**/*.tokens.*"],
     },
     e2e: {
@@ -117,7 +120,9 @@ export const DEFAULT_CONFIG = {
   // e2e tests actually ran — those verdicts need these artifacts.
   inputs: {
     plan: null, // plan markdown: FP ids (logic coverage) are read from it
-    dataSpec: null, // data contract (.json: { interfaces: [{ name, fields }] }) — code type declarations are diffed against it
+    logicSpec: null, // executable logic spec (.json: { functionalPoints, stateMachines, requirePropertyTests })
+    dataSpec: null, // data contract (.json: { interfaces: [{ name, fields, mutability?, frozenFields?, requireConsumption? }] })
+    apiContractResults: null, // live API probe report (.json: { results: [{ endpoint, passed, mismatches? }] })
     designTokens: null, // tokens file (.json with "--name" keys, or .css with --var declarations)
     i18n: null, // { resources: ["path/to/locale.json", ...], callPattern?: regex source }
     testCommand: null, // shell command the scan runs itself before scoring e2e (e.g. "npm test"); pair with testResults so the run also yields counts
@@ -128,6 +133,7 @@ export const DEFAULT_CONFIG = {
     uiEvidenceDir: null, // directory of UI screenshots used as pass evidence
     uiEvidenceMinBytes: 8192, // a screenshot smaller than this is a blank page, not evidence
     visualResults: null, // pixel-diff report in `harness visual` comparison.json shape: { results: [{ name, status, ratio, maxDiffRatio }] }
+    domAuditResults: null, // browser computed-style DOM audit (.json: { pages: [{ name, horizontalOverflowPx, clippedElements, overlappingElements, fontScaleViolations }] })
     visualCommand: null, // shell command the scan runs itself before scoring ui (e.g. a capture+visual script) so visualResults is fresh
     visualTimeoutMs: null, // timeout for visualCommand (default 180000)
   },

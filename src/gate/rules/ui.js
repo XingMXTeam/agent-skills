@@ -12,6 +12,8 @@ import { check, countOccurrences, violation } from "./shared.js";
 
 const UI_FILE = /\.(jsx|tsx|css|scss)$/;
 const HEX_RE = /#[0-9a-fA-F]{6}\b|#[0-9a-fA-F]{3}\b/g;
+const TW_ARBITRARY_RE =
+  /\b(?:bg|text|border|ring|fill|stroke)-\[#[0-9a-fA-F]{3,8}\]|\b(?:p|px|py|pt|pb|pl|pr|m|mx|my|mt|mb|ml|mr|gap|w|h|min-w|max-w|text|rounded)-\[\d+(?:\.\d+)?(?:px|rem)\]/g;
 
 function imgChecks(file, view) {
   const checks = [];
@@ -192,14 +194,101 @@ function visualChecks(ctx) {
   return checks;
 }
 
+function tailwindArbitraryChecks(file, view, rules) {
+  if (typeof rules.maxTailwindArbitraryPerFile !== "number") return [];
+  const isTokenFile = (rules.tokenFilePatterns || []).some((p) => globMatch(p, file.rel));
+  if (isTokenFile) return [];
+  const count =
+    countOccurrences(view.code, TW_ARBITRARY_RE) + countOccurrences(view.strings, TW_ARBITRARY_RE);
+  if (count > rules.maxTailwindArbitraryPerFile) {
+    return [
+      violation(
+        "tailwind-arbitrary-values",
+        `${count} Tailwind arbitrary hex/px value(s) (limit ${rules.maxTailwindArbitraryPerFile}). Arbitrary escapes like text-[#...] or p-[13px] silently bypass the design token scale.`,
+        file.rel,
+        5
+      ),
+    ];
+  }
+  return [];
+}
+
+// Computed-style DOM audit: consumes real browser measurements
+// ({ pages: [{ name, horizontalOverflowPx, clippedElements, overlappingElements, fontScaleViolations }] }).
+function domAuditChecks(ctx) {
+  const rel = ctx.inputs?.domAuditResults;
+  if (!rel) return [];
+  try {
+    const raw = JSON.parse(readFileSync(join(ctx.root, rel), "utf8"));
+    if (!raw || !Array.isArray(raw.pages) || raw.pages.length === 0) {
+      return [check("dom-audit", null, `DOM audit file ${rel} contains no pages — computed-style layout audit unverified.`)];
+    }
+    const checks = [];
+    for (const p of raw.pages) {
+      if (!p || typeof p.name !== "string") continue;
+      if (typeof p.horizontalOverflowPx === "number" && p.horizontalOverflowPx > 0) {
+        checks.push(
+          violation(
+            "dom-horizontal-overflow",
+            `Page "${p.name}" has ${p.horizontalOverflowPx}px horizontal overflow (scrollWidth > clientWidth).`,
+            rel,
+            8
+          )
+        );
+      }
+      if (typeof p.clippedElements === "number" && p.clippedElements > 0) {
+        checks.push(
+          violation(
+            "dom-text-clipped",
+            `Page "${p.name}" has ${p.clippedElements} clipped/truncated element(s) in computed layout.`,
+            rel,
+            6
+          )
+        );
+      }
+      if (typeof p.overlappingElements === "number" && p.overlappingElements > 0) {
+        checks.push(
+          violation(
+            "dom-element-overlap",
+            `Page "${p.name}" has ${p.overlappingElements} overlapping interactive/text element(s).`,
+            rel,
+            8
+          )
+        );
+      }
+      if (typeof p.fontScaleViolations === "number" && p.fontScaleViolations > 0) {
+        checks.push(
+          violation(
+            "dom-font-scale-drift",
+            `Page "${p.name}" has ${p.fontScaleViolations} computed font-size/spacing value(s) outside the approved design token scale.`,
+            rel,
+            5
+          )
+        );
+      }
+    }
+    if (checks.length === 0) {
+      checks.push(check("dom-audit-clean", true, `All ${raw.pages.length} page(s) passed computed-style browser DOM layout audit.`));
+    }
+    return checks;
+  } catch (err) {
+    return [check("dom-audit", null, `DOM audit results could not be loaded (${err.message}) — computed-style layout audit unverified.`)];
+  }
+}
+
 export function checkUi(files, rules, ctx) {
   const uiFiles = files.filter((f) => UI_FILE.test(f.rel));
   const checks = [];
   for (const file of uiFiles) {
     const view = ctx.views.get(file.rel);
-    checks.push(...imgChecks(file, view), ...styleChecks(file, view, rules), ...hexChecks(file, view, rules));
+    checks.push(
+      ...imgChecks(file, view),
+      ...styleChecks(file, view, rules),
+      ...hexChecks(file, view, rules),
+      ...tailwindArbitraryChecks(file, view, rules)
+    );
   }
-  checks.push(...tokenChecks(files, uiFiles, ctx), ...evidenceChecks(ctx), ...visualChecks(ctx));
+  checks.push(...tokenChecks(files, uiFiles, ctx), ...evidenceChecks(ctx), ...visualChecks(ctx), ...domAuditChecks(ctx));
   if (!checks.some((c) => c.passed === false))
     checks.push(check("ui-rules", true, "No accessibility or design-token violations found."));
   return checks;
