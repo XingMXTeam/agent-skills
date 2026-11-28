@@ -1,24 +1,25 @@
 <div align="center">
 
 <a href="https://skills.maoxunxing.com/">
-  <img src="docs/social-preview.png" alt="agent-skills — 一个人，活成一支 10 倍速前端工程团队" width="100%" />
+  <img src="docs/social-preview.png" alt="ShipProof — 先验真，再上线：独立三层验收与高质量 AI 交付体系" width="100%" />
 </a>
 
 <br />
 
-# ⚡ agent-skills
+# 🛡️ ShipProof
 
-### **一个人，活成一支 10 倍速前端工程团队。**
-**27 份经过真实项目验证的前端 SaaS 交付 Skills —— 先挑刺出方案、实时采风多方案 UI 试衣间、老仓库变更红线守卫、三层智能自动化验收、零假修复。**
+### **先验真，再上线。拒绝 AI 自己给自己打满分。**
+**面向 AI 编程 Agent 的独立三层验真与高质量交付引擎 —— 确定性代码/协议/PBT 属性测试门禁、真浏览器交互走查、SHA-256 防篡改离线 HTML 验收报告、老仓库红线守卫，以及 27 份可执行交付 Skills。**
 
 <p>
   <a href="https://skills.maoxunxing.com/">
-    <img src="https://img.shields.io/badge/⚡_打开交互式光流工作流与实战剧场-skills.maoxunxing.com-6366f1?style=for-the-badge" alt="打开可视化工作流" />
+    <img src="https://img.shields.io/badge/🛡️_打开交互式光流验真与交付剧场-skills.maoxunxing.com-6366f1?style=for-the-badge" alt="打开可视化工作流" />
   </a>
 </p>
 
 <p>
-  <img src="https://img.shields.io/badge/Skills-27_份可执行能力包-8b5cf6?style=flat-square" alt="27 份 Skills" />
+  <img src="https://img.shields.io/badge/独立验真-三层深度评测引擎-22d3ee?style=flat-square" alt="三层深度评测引擎" />
+  <img src="https://img.shields.io/badge/Skills-27_份交付契约-8b5cf6?style=flat-square" alt="27 份 Skills" />
   <img src="https://img.shields.io/badge/Antigravity-原生适配-06b6d4?style=flat-square" alt="Antigravity" />
   <img src="https://img.shields.io/badge/Claude_Code-原生适配-f59e0b?style=flat-square" alt="Claude Code" />
   <img src="https://img.shields.io/badge/Codex-原生适配-10b981?style=flat-square" alt="Codex" />
@@ -33,7 +34,7 @@
 
 ## 🔥 为什么 90% 用 AI 写 SaaS 的项目都会半路烂尾？
 
-| 维度 | ❌ 传统 Vibe Coding（靠聊天赌运气） | ⚡ 装上 26 份 `agent-skills` 之后 |
+| 维度 | ❌ 传统 Vibe Coding（靠聊天赌运气） | 🛡️ 装上 **ShipProof**（验真 + 27 份交付契约）之后 |
 | :--- | :--- | :--- |
 | **写码之前** | 拿到模糊需求十秒开写，自由发挥六小时方向全错 | **`challenge-and-plan`**：先读仓挑刺、问清 3 个关键问题，给 3 版带取舍方案拍板 |
 | **开发过程** | 改好 A 搞坏 B、爱顺手重构无关文件、聊到第 5 轮彻底失忆 | **独立 Worktree 隔离 + 状态先行**：原子提交、长流程规则保留率 ~95% |

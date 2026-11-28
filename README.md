@@ -1,24 +1,25 @@
 <div align="center">
 
 <a href="https://skills.maoxunxing.com/">
-  <img src="docs/social-preview.png" alt="agent-skills — One Dev. 10x Team." width="100%" />
+  <img src="docs/social-preview.png" alt="ShipProof — Ship Verified. Zero Self-Grading." width="100%" />
 </a>
 
 <br />
 
-# ⚡ ShipProof
+# 🛡️ ShipProof
 
-### **One Developer. A 10x Frontend Engineering Team.**
-**27 battle-tested Agent Skills for shipping production Frontend SaaS — specs first, live trend-scouted UI variants, brownfield contract guards, three-layer automated proof, zero fake fixes.**
+### **Ship Verified. Zero Self-Grading.**
+**Independent 3-layer verification & high-quality delivery harness for AI Coding Agents — deterministic code/schema/PBT gates, real browser DOM proof, SHA-256 tamper-locked HTML acceptance reports, brownfield contract guards & 27 battle-tested skills.**
 
 <p>
   <a href="https://skills.maoxunxing.com/">
-    <img src="https://img.shields.io/badge/⚡_Interactive_Workflow_&_Live_Theater-skills.maoxunxing.com-6366f1?style=for-the-badge" alt="Interactive Workflow" />
+    <img src="https://img.shields.io/badge/🛡️_Interactive_Verification_&_Delivery_Flow-skills.maoxunxing.com-6366f1?style=for-the-badge" alt="Interactive Workflow" />
   </a>
 </p>
 
 <p>
-  <img src="https://img.shields.io/badge/Skills-27_Executable_Contracts-8b5cf6?style=flat-square" alt="27 Skills" />
+  <img src="https://img.shields.io/badge/Verification-3--Layer_Deep_Evaluator-22d3ee?style=flat-square" alt="3-Layer Deep Evaluator" />
+  <img src="https://img.shields.io/badge/Skills-27_Delivery_Contracts-8b5cf6?style=flat-square" alt="27 Skills" />
   <img src="https://img.shields.io/badge/Antigravity-Supported-06b6d4?style=flat-square" alt="Antigravity" />
   <img src="https://img.shields.io/badge/Claude_Code-Supported-f59e0b?style=flat-square" alt="Claude Code" />
   <img src="https://img.shields.io/badge/Codex-Supported-10b981?style=flat-square" alt="Codex" />
@@ -33,7 +34,7 @@
 
 ## 🔥 Why 90% of AI-Built SaaS Projects Stall Halfway
 
-| | ❌ Traditional Vibe Coding (Chat & Pray) | ⚡ With `agent-skills` Installed |
+| | ❌ Traditional Vibe Coding (Chat & Pray) | 🛡️ With **ShipProof** Installed |
 | :--- | :--- | :--- |
 | **Before Coding** | Jumps straight into code in 10 seconds, builds the wrong thing for 6 hours | **`challenge-and-plan`**: challenges assumptions, asks 3 sharp questions, gives 3 trade-off options first |
 | **During Execution** | Breaks working features, mixes unrelated refactors, forgets rules by turn 5 | **Isolated worktrees + state-schema-first**: clean atomic commits, ~95% rule retention |
@@ -106,8 +107,8 @@ Every Skill is an **executable deliverable contract** — not vague advice. Incl
 <summary><strong>🛠️ Advanced: CLI Kernel & Local Repo Installation</strong></summary>
 
 ```bash
-git clone https://github.com/XingMXTeam/agent-skills.git
-cd agent-skills && npm install
+git clone https://github.com/XingMXTeam/ShipProof.git
+cd ShipProof && npm install
 ```
 
 See the full architecture notes at [maoxunxing.com/en/frontend-ai-collaboration-design/](https://maoxunxing.com/en/frontend-ai-collaboration-design/).
