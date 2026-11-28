@@ -26,7 +26,7 @@
   <img src="https://img.shields.io/badge/Cursor-原生适配-ec4899?style=flat-square" alt="Cursor" />
 </p>
 
-[English](./README.md) | **简体中文** · [🌐 可视化光流工作流](https://skills.maoxunxing.com/) · [🧠 Prompt 工作台](https://prompts.maoxunxing.com/) · [🔥 实战知识库 &amp; 1v1 陪跑](https://maoxunxing.com/zh-cn/consult/)
+[English](./README.md) | **简体中文** · [📖 完整设计说明书 Why & How (`SPEC.md`)](./SPEC.md) · [🌐 可视化光流工作流](https://skills.maoxunxing.com/) · [🧠 Prompt 工作台](https://prompts.maoxunxing.com/) · [🔥 实战知识库 &amp; 1v1 陪跑](https://maoxunxing.com/zh-cn/consult/)
 
 </div>
 
@@ -70,6 +70,8 @@
   - 独立上下文实操交互（`interactive-review`），结合浏览器 `getComputedStyle` 巡检横向溢出、文本截断、元素重叠与字号阶梯漂移（`inputs.domAuditResults`），并为目标产物绑定 **SHA-256** 防篡改。
 - **第 3 层 · 老板 30 秒签字放行**
   - 主观审美与生产上线风险永远归你——前两层全绿后打包为可双击离线打开的 HTML 验收报告，你睡醒扫一眼铁证点 Merge 即可。
+
+> 📖 **想彻底搞懂背后的 Why & How？** 为什么坚持「一票否决压倒平均分」「三态裁决」「SHA-256 防篡改」以及「0→1 与老仓库分轨治理」？查看面向新手也能看懂的完整架构与决策说明书 👉 **[`SPEC.md`](./SPEC.md)**
 
 ---
 

@@ -26,7 +26,7 @@
   <img src="https://img.shields.io/badge/Cursor-Supported-ec4899?style=flat-square" alt="Cursor" />
 </p>
 
-**English** | [简体中文](./README.zh-CN.md) · [🌐 Interactive Visual Workflow](https://skills.maoxunxing.com/) · [🧠 Prompt Studio](https://prompts.maoxunxing.com/) · [🚀 Full Playbook & 1v1 Setup](https://maoxunxing.com/zh-cn/consult/)
+**English** | [简体中文](./README.zh-CN.md) · [📖 Why & How Architecture Guide (`SPEC.md`)](./SPEC.md) · [🌐 Interactive Visual Workflow](https://skills.maoxunxing.com/) · [🧠 Prompt Studio](https://prompts.maoxunxing.com/) · [🚀 Full Playbook & 1v1 Setup](https://maoxunxing.com/zh-cn/consult/)
 
 </div>
 
@@ -70,6 +70,8 @@
   - Runs interactive journeys in a fresh context (`interactive-review`), audits computed layout (`inputs.domAuditResults`: horizontal overflow, clipped/overlapping elements, font scale drift, opt-in Tailwind arbitrary escapes), and binds every artifact to its **SHA-256** hash so nothing can be tampered with post-review.
 - **Layer 3 · 30-Second Human Sign-Off**
   - Subjective taste (`verify: "human"`) and production merges always belong to you — delivered via an offline, double-clickable HTML acceptance report.
+
+> 📖 **Curious *why* we designed veto-over-averages, three-state verdicts, SHA-256 tamper locks, and greenfield vs. brownfield separation — and *how* every module works under the hood?** Read the full beginner-friendly architecture guide in **[`SPEC.md`](./SPEC.md)** →
 
 ---
 
